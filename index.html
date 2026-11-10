@@ -26,7 +26,7 @@ body {
 
 h1 {
     color: #ff3344;
-    font-size: clamp(20px, 5vw, 28px);
+    font-size: clamp(19px, 5vw, 27px);
     letter-spacing: 2px;
     text-align: center;
     text-shadow: 0 0 15px #ff1744;
@@ -46,16 +46,17 @@ h1 {
     white-space: nowrap;
     user-select: none;
     pointer-events: none;
+    opacity: 0;
 }
 
 .red {
     color: #ff1744;
-    text-shadow: 0 0 5px #ff1744;
+    text-shadow: 0 0 5px rgba(255, 23, 68, 0.7);
 }
 
 .green {
     color: #00e676;
-    text-shadow: 0 0 5px #00e676;
+    text-shadow: 0 0 5px rgba(0, 230, 118, 0.6);
 }
 </style>
 </head>
@@ -66,13 +67,23 @@ h1 {
 <div id="canvas"></div>
 
 <script>
+
 const phrases = [
-    "I LOVE YOU", "Te amo", "Je t'aime",
-    "Ich liebe dich", "Te quiero",
-    "أحبك", "Mahal kita", "Nakapenda",
-    "S'agapo", "Milujem ťa",
-    "Kocham Cię", "Seni seviyorum",
-    "Я тебя люблю", "사랑해요", "我爱你"
+    "I LOVE YOU",
+    "Te amo",
+    "Je t'aime",
+    "Ich liebe dich",
+    "Te quiero",
+    "أحبك",
+    "Mahal kita",
+    "Nakapenda",
+    "S'agapo",
+    "Milujem ťa",
+    "Kocham Cię",
+    "Seni seviyorum",
+    "Я тебя люблю",
+    "사랑해요",
+    "我爱你"
 ];
 
 const canvas = document.getElementById("canvas");
@@ -80,102 +91,214 @@ const canvas = document.getElementById("canvas");
 const centerX = 220;
 const centerY = 205;
 
-function addWord(x, y, color, size = 10) {
+const words = [];
+
+function addWord(x, y, color) {
+
     const el = document.createElement("div");
 
     el.className = `word ${color}`;
+
     el.textContent =
         phrases[Math.floor(Math.random() * phrases.length)];
 
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    el.style.fontSize = `${size}px`;
 
     canvas.appendChild(el);
+
+    words.push({
+        element: el,
+        color: color,
+        x: x,
+        y: y
+    });
 }
 
-// رسم بتلات الوردة
-const petalCount = 8;
-const wordsPerPetal = 35;
 
-for (let p = 0; p < petalCount; p++) {
+// =================================
+// 1. ROOTS - الجذور
+// =================================
 
-    const angle = (p / petalCount) * Math.PI * 2;
+const roots = [];
 
-    for (let i = 0; i < wordsPerPetal; i++) {
-
-        const t = Math.random();
-
-        // توزيع الكلمات داخل بتلات الوردة
-        const radius = 100 * Math.sqrt(t);
-        const spread = (Math.random() - 0.5) * 0.45;
-
-        const a = angle + spread;
-
-        const x = centerX + Math.cos(a) * radius;
-        const y = centerY + Math.sin(a) * radius * 0.82;
-
-        addWord(x, y, "red");
-    }
-}
-
-// قلب الوردة
-for (let i = 0; i < 35; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = Math.random() * 22;
-
-    addWord(
-        centerX + Math.cos(angle) * radius,
-        centerY + Math.sin(angle) * radius,
-        "red"
-    );
-}
-
-// الساق
-for (let i = 0; i < 65; i++) {
-    const y = centerY + 95 + i * 2.1;
-    const x = centerX + Math.sin(i * 0.035) * 5;
-
-    addWord(x, y, "green");
-}
-
-// الأوراق الجانبية
-function addLeaf(direction) {
-    for (let i = 0; i < 32; i++) {
-        const t = i / 32;
-
-        const x = centerX + direction * t * 95;
-        const y = centerY + 170 - t * 45
-            + Math.sin(t * Math.PI) * 17;
-
-        addWord(x, y, "green", 9);
-    }
-}
-
-addLeaf(1);
-addLeaf(-1);
-
-// الجذور الرئيسية
 for (let side of [-1, 1]) {
+
     for (let i = 0; i < 35; i++) {
+
         const t = i / 35;
 
-        const x = centerX + side * t * 65;
-        const y = centerY + 235 + t * 55;
-
-        addWord(x, y, "green", 9);
+        roots.push({
+            x: centerX + side * t * 65,
+            y: centerY + 235 + t * 55
+        });
     }
 }
 
 // الجذر الأوسط
 for (let i = 0; i < 22; i++) {
-    addWord(
-        centerX + Math.sin(i * 0.12) * 4,
-        centerY + 230 + i * 2.5,
-        "green",
-        9
-    );
+
+    roots.push({
+        x: centerX + Math.sin(i * 0.12) * 4,
+        y: centerY + 230 + i * 2.5
+    });
 }
+
+roots.forEach(p => addWord(p.x, p.y, "green"));
+
+
+// =================================
+// 2. STEM - الساق
+// =================================
+
+const stem = [];
+
+for (let i = 0; i < 65; i++) {
+
+    stem.push({
+        x: centerX + Math.sin(i * 0.035) * 5,
+        y: centerY + 95 + i * 2.1
+    });
+}
+
+stem.forEach(p => addWord(p.x, p.y, "green"));
+
+
+// =================================
+// 3. LEAVES - الأوراق
+// =================================
+
+const leaves = [];
+
+for (let side of [-1, 1]) {
+
+    for (let i = 0; i < 32; i++) {
+
+        const t = i / 32;
+
+        leaves.push({
+            x: centerX + side * t * 95,
+            y: centerY + 170 - t * 45
+                + Math.sin(t * Math.PI) * 17
+        });
+    }
+}
+
+leaves.forEach(p => addWord(p.x, p.y, "green"));
+
+
+// =================================
+// 4. ROSE PETALS - البتلات
+// =================================
+
+const petals = [];
+
+for (let p = 0; p < 8; p++) {
+
+    const angle = (p / 8) * Math.PI * 2;
+
+    for (let i = 0; i < 35; i++) {
+
+        const radius = 100 * Math.sqrt(Math.random());
+
+        const a = angle +
+            (Math.random() - 0.5) * 0.45;
+
+        petals.push({
+            x: centerX + Math.cos(a) * radius,
+            y: centerY + Math.sin(a) * radius * 0.82
+        });
+    }
+}
+
+petals.forEach(p => addWord(p.x, p.y, "red"));
+
+
+// =================================
+// 5. ROSE CENTER - قلب الوردة
+// =================================
+
+const heart = [];
+
+for (let i = 0; i < 35; i++) {
+
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 22;
+
+    heart.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius
+    });
+}
+
+heart.forEach(p => addWord(p.x, p.y, "red"));
+
+
+// =================================
+// 6. ANIMATION - حركة الظهور
+// =================================
+
+// جميع الكلمات الخضراء أولاً
+const greenWords = words.filter(w => w.color === "green");
+
+// ثم البتلات الحمراء
+const redWords = words.filter(w => w.color === "red");
+
+// ترتيب البتلات بشكل متدرج حول الوردة
+redWords.sort((a, b) => {
+
+    const angleA = Math.atan2(
+        a.y - centerY,
+        a.x - centerX
+    );
+
+    const angleB = Math.atan2(
+        b.y - centerY,
+        b.x - centerX
+    );
+
+    return angleA - angleB;
+});
+
+// ترتيب الظهور:
+// الجذور ← الساق ← الأوراق ← البتلات
+const sequence = [
+    ...roots.map(p =>
+        words.find(w => w.x === p.x && w.y === p.y)
+    ),
+    ...stem.map(p =>
+        words.find(w => w.x === p.x && w.y === p.y)
+    ),
+    ...leaves.map(p =>
+        words.find(w => w.x === p.x && w.y === p.y)
+    ),
+    ...redWords
+].filter(Boolean);
+
+// منع تكرار العناصر
+const uniqueSequence = [...new Set(sequence)];
+
+let current = 0;
+
+function revealNext() {
+
+    if (current >= uniqueSequence.length) {
+        return;
+    }
+
+    const word = uniqueSequence[current].element;
+
+    word.style.transition = "opacity 0.3s ease";
+    word.style.opacity = "1";
+
+    current++;
+
+    setTimeout(revealNext, 65);
+}
+
+// بدء الأنيميشن
+setTimeout(revealNext, 500);
+
 </script>
 
 </body>
