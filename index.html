@@ -1,106 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1 Rose, Every Language</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #000;
-            color: #fff;
-            font-family: 'Georgia', serif;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 Rose, Every Language</title>
 
-        h1 {
-            color: #ff3344;
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            letter-spacing: 2px;
-            text-align: center;
-            text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        #canvas {
-            position: relative;
-            width: 400px;
-            height: 450px;
-        }
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #000;
+    color: white;
+    font-family: Georgia, serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
 
-        .word {
-            position: absolute;
-            font-size: 10px;
-            white-space: nowrap;
-            user-select: none;
-            transition: 0.3s;
-        }
+h1 {
+    color: #ff3344;
+    font-size: clamp(20px, 5vw, 28px);
+    letter-spacing: 2px;
+    text-align: center;
+    text-shadow: 0 0 15px #ff1744;
+    margin-bottom: 10px;
+}
 
-        .red { color: #ff1744; text-shadow: 0 0 4px rgba(255, 23, 68, 0.6); }
-        .green { color: #00e676; text-shadow: 0 0 4px rgba(0, 230, 118, 0.6); }
-    </style>
+#canvas {
+    position: relative;
+    width: min(95vw, 440px);
+    height: min(80vh, 570px);
+}
+
+.word {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: clamp(7px, 2vw, 10px);
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+}
+
+.red {
+    color: #ff1744;
+    text-shadow: 0 0 5px #ff1744;
+}
+
+.green {
+    color: #00e676;
+    text-shadow: 0 0 5px #00e676;
+}
+</style>
 </head>
+
 <body>
 
-    <h1>1 Rose, Every Language</h1>
-    <div id="canvas"></div>
+<h1>1 Rose, Every Language</h1>
+<div id="canvas"></div>
 
-    <script>
-        const phrases = [
-            "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", "Te quiero",
-            "أحبك", "Mahal kita", "Nakapenda", "S'agapo", "Milujem ťa",
-            "Kocham Cię", "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你"
-        ];
+<script>
+const phrases = [
+    "I LOVE YOU", "Te amo", "Je t'aime",
+    "Ich liebe dich", "Te quiero",
+    "أحبك", "Mahal kita", "Nakapenda",
+    "S'agapo", "Milujem ťa",
+    "Kocham Cię", "Seni seviyorum",
+    "Я тебя люблю", "사랑해요", "我爱你"
+];
 
-        const canvas = document.getElementById('canvas');
-        const total = 160;
+const canvas = document.getElementById("canvas");
 
-        for (let i = 0; i < total; i++) {
-            const el = document.createElement('div');
-            el.className = 'word';
-            el.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+const centerX = 220;
+const centerY = 205;
 
-            let x = 0, y = 0, isRed = true;
+function addWord(x, y, color, size = 10) {
+    const el = document.createElement("div");
 
-            if (i < 120) {
-                // رسم 8 بتلات وردة هندسية
-                isRed = true;
-                const angle = (i / 120) * Math.PI * 2;
-                // معادلة الـ 8 بتلات (Rose Curve: r = cos(4 * theta))
-                const r = 90 * Math.abs(Math.cos(4 * angle)) + 20;
-                
-                // توزيع عشوائي خفيف داخل البتلة لتعبئتها بشكل طبيعي
-                const dist = r * (0.3 + Math.random() * 0.7);
-                x = Math.cos(angle) * dist;
-                y = Math.sin(angle) * dist - 40; // رفع الوردة للأعلى قليلاً
-            } else {
-                // الساق والجذور الخضراء في الأسفل
-                isRed = false;
-                const stemStep = i - 120;
-                y = stemStep * 3 + 45; // النزول للأسفل
-                
-                if (stemStep < 30) {
-                    x = Math.sin(stemStep * 0.2) * 6; // الساق بخط مستقيم ومنحني بسيط
-                } else {
-                    // تفرع الجذور يمين ويسار في القاع
-                    const side = (stemStep % 2 === 0) ? 1 : -1;
-                    x = side * (stemStep - 25) * 1.2;
-                    y += 10;
-                }
-            }
+    el.className = `word ${color}`;
+    el.textContent =
+        phrases[Math.floor(Math.random() * phrases.length)];
 
-            el.classList.add(isRed ? 'red' : 'green');
-            // تمركز العناصر في منتصف الـ canvas تماماً
-            el.style.left = `calc(50% + ${x}px)`;
-            el.style.top = `calc(50% + ${y}px)`;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.fontSize = `${size}px`;
 
-            canvas.appendChild(el);
-        }
-    </script>
+    canvas.appendChild(el);
+}
+
+// رسم بتلات الوردة
+const petalCount = 8;
+const wordsPerPetal = 35;
+
+for (let p = 0; p < petalCount; p++) {
+
+    const angle = (p / petalCount) * Math.PI * 2;
+
+    for (let i = 0; i < wordsPerPetal; i++) {
+
+        const t = Math.random();
+
+        // توزيع الكلمات داخل بتلات الوردة
+        const radius = 100 * Math.sqrt(t);
+        const spread = (Math.random() - 0.5) * 0.45;
+
+        const a = angle + spread;
+
+        const x = centerX + Math.cos(a) * radius;
+        const y = centerY + Math.sin(a) * radius * 0.82;
+
+        addWord(x, y, "red");
+    }
+}
+
+// قلب الوردة
+for (let i = 0; i < 35; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 22;
+
+    addWord(
+        centerX + Math.cos(angle) * radius,
+        centerY + Math.sin(angle) * radius,
+        "red"
+    );
+}
+
+// الساق
+for (let i = 0; i < 65; i++) {
+    const y = centerY + 95 + i * 2.1;
+    const x = centerX + Math.sin(i * 0.035) * 5;
+
+    addWord(x, y, "green");
+}
+
+// الأوراق الجانبية
+function addLeaf(direction) {
+    for (let i = 0; i < 32; i++) {
+        const t = i / 32;
+
+        const x = centerX + direction * t * 95;
+        const y = centerY + 170 - t * 45
+            + Math.sin(t * Math.PI) * 17;
+
+        addWord(x, y, "green", 9);
+    }
+}
+
+addLeaf(1);
+addLeaf(-1);
+
+// الجذور الرئيسية
+for (let side of [-1, 1]) {
+    for (let i = 0; i < 35; i++) {
+        const t = i / 35;
+
+        const x = centerX + side * t * 65;
+        const y = centerY + 235 + t * 55;
+
+        addWord(x, y, "green", 9);
+    }
+}
+
+// الجذر الأوسط
+for (let i = 0; i < 22; i++) {
+    addWord(
+        centerX + Math.sin(i * 0.12) * 4,
+        centerY + 230 + i * 2.5,
+        "green",
+        9
+    );
+}
+</script>
+
 </body>
 </html>
