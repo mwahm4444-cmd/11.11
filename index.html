@@ -1,536 +1,120 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#000000">
-<title>1 Rose, Every Language</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1 Rose, Every Language</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
 
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        h1 {
+            color: #ff3344;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
+            animation: pulse 2s infinite;
+        }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #000;
-}
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1.03); }
+        }
 
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-</style>
+        #canvas-container {
+            position: relative;
+            width: 500px;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word {
+            position: absolute;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: all 0.5s ease-in-out;
+            user-select: none;
+        }
+
+        .red { color: #ff2244; }
+        .green { color: #22aa44; }
+    </style>
 </head>
-
 <body>
-<canvas id="rose"></canvas>
 
-<script>
+    <h1>1 Rose, Every Language</h1>
+    <div id="canvas-container"></div>
 
-const canvas = document.getElementById("rose");
-const ctx = canvas.getContext("2d");
+    <script>
+        const phrases = [
+            "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", "Te quiero",
+            "أحبك", "Mahal kita", "Nakapenda", "S'agapo", "Milujem ťa",
+            "Kocham Cię", "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你",
+            "อารักก์", "Ti amo", "Jeg elsker dig", "Minä rakastan sinua", "Volim te"
+        ];
 
-const W = 800;
-const H = 800;
+        const container = document.getElementById('canvas-container');
+        const totalWords = 150;
 
-const RED = [
-    "#650019", "#800020", "#99002D",
-    "#B0003A", "#C40045", "#D51A54",
-    "#E52B65", "#F04A7B"
-];
+        // توليد الوردة باستخدام معادلات رياضية (قلب للأعلى وساق للأفل)
+        for (let i = 0; i < totalWords; i++) {
+            const el = document.createElement('div');
+            el.classList.add('word');
+            
+            // اختيار جملة عشوائية
+            const text = phrases[Math.floor(Math.random() * phrases.length)];
+            el.innerText = text;
 
-const GREEN = [
-    "#164B25", "#20632D", "#347D3C",
-    "#559B55", "#79B76B"
-];
+            let x = 0, y = 0;
+            let isRed = true;
 
-const LOVE_WORDS = [
-    "I LOVE YOU",
-    "MY PRINCESS",
-    "MY BABY",
-    "MY DARLING",
-    "MY ANGEL",
-    "MY SWEETHEART",
-    "MY KITTEN",
-    "MY CUTIE",
-    "MY QUEEN",
-    "MY PRECIOUS",
-    "MY BUNNY",
-    "MY SUNSHINE",
-    "MY LITTLE GIRL",
-    "MY PRETTY GIRL",
-    "MY HONEY",
-    "MY HEART",
-    "MY SWEETIE",
-    "MY FLOWER",
-    "MY LOVE",
-    "MY EVERYTHING",
-    "MY WORLD",
-    "MY FAVORITE",
-    "MY DREAM",
-    "MY TREASURE",
-    "MY BEAUTIFUL",
-    "MY DEAREST",
-    "MY SWEET GIRL",
-    "MY STAR",
-    "MY ANGEL BABY",
-    "MY LOVELY GIRL",
-    "MY ONE & ONLY",
-    "MY HAPPINESS",
-    "MY FOREVER",
-    "MY GORGEOUS GIRL",
-    "MY TEDDY",
-    "MY BUTTERFLY",
-    "MY LITTLE STAR",
-    "MY SWEET PRINCESS",
-    "MY HEARTBEAT",
-    "MY ADORABLE GIRL",
-    "MY MOONLIGHT",
-    "MY ROSE",
-    "MY LOVELY ANGEL",
-    "MY BABY GIRL",
-    "MY BELOVED",
-    "MY SPECIAL ONE",
-    "MY SUNSHINE GIRL",
-    "MY SWEET LOVE",
-    "MY CUTIE PIE",
-    "MY LITTLE ANGEL",
-    "MY PRECIOUS GIRL",
-    "MY DARLING BABY",
-    "ONLY YOU",
-    "FOREVER YOURS",
-    "I ADORE YOU",
-    "MY SOULMATE",
-    "MY SWEET WORLD",
-    "MY EVERYTHING",
-    "FOREVER & ALWAYS",
-    "YOU ARE MY WORLD"
-];
-
-const GREEN_WORDS = [
-    "MY LOVE",
-    "FOREVER",
-    "ALWAYS",
-    "MY HEART",
-    "MY WORLD",
-    "ONLY YOU",
-    "TRUE LOVE",
-    "MY EVERYTHING",
-    "MY ANGEL",
-    "MY BABY",
-    "MY PRINCESS",
-    "MY DARLING"
-];
-
-let dpr = 1;
-let items = [];
-let stars = [];
-
-let startTime = 0;
-let animationFrame = 0;
-
-const TOTAL_DURATION = 8000;
-const HOLD_DURATION = 2500;
-
-function resize() {
-
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
-
-    const scale = Math.min(
-        window.innerWidth / W,
-        window.innerHeight / H
-    );
-
-    const offsetX = (window.innerWidth - W * scale) / 2;
-    const offsetY = (window.innerHeight - H * scale) / 2;
-
-    ctx.setTransform(
-        dpr * scale, 0,
-        0, dpr * scale,
-        dpr * offsetX,
-        dpr * offsetY
-    );
-}
-
-function random(array) {
-    return array[Math.floor(Math.random() * array.length)];
-}
-
-// ======================================
-// TEXT ELEMENTS
-// ======================================
-
-function addText(x, y, text, color, size = 8) {
-
-    items.push({
-        x,
-        y,
-        text,
-        color,
-        size,
-        delay: items.length * 24
-    });
-}
-
-// ======================================
-// CURVED TITLE
-// ======================================
-
-function createTitle() {
-
-    const title = "1 Rose, Every Language";
-
-    const cx = 400;
-    const cy = 85;
-    const radius = 315;
-
-    for (let i = 0; i < title.length; i++) {
-
-        const angle =
-            Math.PI +
-            Math.PI * i / (title.length - 1);
-
-        const x = cx + Math.cos(angle) * radius;
-        const y = cy + Math.sin(angle) * 48;
-
-        addText(
-            x,
-            y,
-            title[i],
-            "#E50937",
-            24
-        );
-    }
-}
-
-// ======================================
-// HEART-SHAPED ROSE
-// ======================================
-
-function insideHeart(x, y) {
-
-    const a = x * x + y * y - 1;
-
-    return (
-        a * a * a -
-        x * x * y * y * y
-    ) <= 0;
-}
-
-function createRose() {
-
-    const cx = 400;
-    const cy = 285;
-
-    const radiusX = 172;
-    const radiusY = 145;
-
-    let row = 0;
-
-    for (let py = -1.12; py <= 1.12; py += 0.095) {
-
-        let column = 0;
-
-        for (let px = -1.2; px <= 1.2; px += 0.22) {
-
-            if (insideHeart(px, py)) {
-
-                const x = cx + px * radiusX;
-                const y = cy - py * radiusY;
-
-                const word = random(LOVE_WORDS);
-                const color = random(RED);
-
-                const size = random([7, 8, 8, 9]);
-
-                addText(
-                    x,
-                    y,
-                    word,
-                    color,
-                    size
-                );
+            if (i < 100) {
+                // الجزء العلوي (الوردة / القلب)
+                isRed = true;
+                const t = Math.random() * Math.PI * 2;
+                // معادلة شكل القلب
+                x = 16 * Math.pow(Math.sin(t), 3);
+                y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                
+                // تكبير الشكل وتوزيع الكلمات داخله عشوائياً
+                const scale = 12 + Math.random() * 5;
+                x = x * scale;
+                y = y * scale - 50;
+            } else {
+                // الجزء السفلي (الساق والأوراق)
+                isRed = false;
+                y = (i - 100) * 3 - 20; // تمتد للأسفل
+                x = Math.sin(y * 0.1) * 15; // انحناءة بسيطة للساق
             }
 
-            column++;
+            el.classList.add(isRed ? 'red' : 'green');
+            
+            // تمركز العناصر داخل الحاوية
+            el.style.left = `calc(50% + ${x}px)`;
+            el.style.top = `calc(50% + ${y}px)`;
+            
+            // تأثير ظهور تدريجي عشوائي
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.style.opacity = '0.8';
+            }, i * 30);
+
+            container.appendChild(el);
         }
-
-        row++;
-    }
-}
-
-// ======================================
-// ROSE DETAILS
-// ======================================
-
-function createRoseDetails() {
-
-    const cx = 400;
-    const cy = 285;
-
-    for (let i = 0; i < 28; i++) {
-
-        const angle = Math.random() * Math.PI * 2;
-        const radius = Math.random() * 55;
-
-        const x = cx + Math.cos(angle) * radius;
-        const y = cy + Math.sin(angle) * radius;
-
-        addText(
-            x,
-            y,
-            random(LOVE_WORDS),
-            random(RED),
-            8
-        );
-    }
-}
-
-// ======================================
-// LEAVES
-// ======================================
-
-function createLeaves() {
-
-    const leaves = [
-        {x: 290, y: 520, side: -1},
-        {x: 510, y: 540, side: 1},
-        {x: 310, y: 600, side: -1},
-        {x: 490, y: 610, side: 1}
-    ];
-
-    leaves.forEach(leaf => {
-
-        for (let i = 0; i < 11; i++) {
-
-            const t = i / 10;
-
-            const x =
-                leaf.x +
-                leaf.side * t * 68;
-
-            const y =
-                leaf.y -
-                Math.sin(t * Math.PI) * 35;
-
-            addText(
-                x,
-                y,
-                random(GREEN_WORDS),
-                random(GREEN),
-                8
-            );
-        }
-    });
-}
-
-// ======================================
-// STEM
-// ======================================
-
-function createStem() {
-
-    const cx = 400;
-
-    for (let i = 0; i < 27; i++) {
-
-        const y = 430 + i * 11;
-
-        const x =
-            cx + Math.sin(i * 0.23) * 5;
-
-        addText(
-            x,
-            y,
-            random(GREEN_WORDS),
-            random(GREEN),
-            8
-        );
-    }
-}
-
-// ======================================
-// ROOTS
-// ======================================
-
-function createRoots() {
-
-    const cx = 400;
-    const baseY = 720;
-
-    const branches = [
-        [-165, 790],
-        [-130, 775],
-        [-95, 795],
-        [-60, 780],
-        [-25, 795],
-        [0, 800],
-        [25, 795],
-        [60, 780],
-        [95, 795],
-        [130, 775],
-        [165, 790]
-    ];
-
-    branches.forEach(branch => {
-
-        for (let i = 0; i < 6; i++) {
-
-            const t = i / 6;
-
-            const x = cx + branch[0] * t;
-            const y = baseY + (branch[1] - baseY) * t;
-
-            addText(
-                x,
-                y,
-                random(GREEN_WORDS),
-                random(GREEN),
-                7
-            );
-        }
-    });
-}
-
-// ======================================
-// BACKGROUND
-// ======================================
-
-function createStars() {
-
-    stars = [];
-
-    for (let i = 0; i < 45; i++) {
-
-        stars.push({
-            x: Math.random() * W,
-            y: Math.random() * H,
-            size: Math.random() * 1.2 + 0.3,
-            alpha: Math.random() * 0.5 + 0.2
-        });
-    }
-}
-
-function drawBackground() {
-
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, W, H);
-
-    stars.forEach(star => {
-
-        ctx.globalAlpha = star.alpha;
-        ctx.fillStyle = "#FFFFFF";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            star.x,
-            star.y,
-            star.size,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-    });
-
-    ctx.globalAlpha = 1;
-}
-
-// ======================================
-// ANIMATION
-// ======================================
-
-function draw(time) {
-
-    ctx.clearRect(0, 0, W, H);
-
-    drawBackground();
-
-    const elapsed = time - startTime;
-
-    const progress = Math.min(
-        1,
-        elapsed / TOTAL_DURATION
-    );
-
-    const visibleCount = Math.floor(
-        progress * items.length
-    );
-
-    for (let i = 0; i < visibleCount; i++) {
-
-        const item = items[i];
-
-        ctx.font = `bold ${item.size}px Georgia`;
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        ctx.fillStyle = item.color;
-
-        ctx.fillText(
-            item.text,
-            item.x,
-            item.y
-        );
-    }
-
-    if (progress >= 1) {
-
-        if (animationFrame === 0) {
-            animationFrame = time;
-        }
-
-        if (time - animationFrame > HOLD_DURATION) {
-
-            startTime = time;
-            animationFrame = 0;
-        }
-    }
-
-    requestAnimationFrame(draw);
-}
-
-// ======================================
-// START
-// ======================================
-
-function start() {
-
-    items = [];
-
-    createTitle();
-    createRose();
-    createRoseDetails();
-    createLeaves();
-    createStem();
-    createRoots();
-
-    resize();
-
-    startTime = performance.now();
-
-    requestAnimationFrame(draw);
-}
-
-window.addEventListener("resize", resize);
-
-start();
-
-</script>
+    </script>
 </body>
 </html>
