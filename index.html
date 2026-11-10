@@ -1,355 +1,225 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>11:11 | A Little Universe For You</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>11:11 — For You</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Playfair+Display:ital,wght@1,500&display=swap');
-
-* { box-sizing:border-box; }
-
-body {
-  margin:0;
-  min-height:100vh;
-  overflow:hidden;
-  background:radial-gradient(ellipse at center,#24102e 0%,#100b1b 50%,#05040b 100%);
-  color:white;
-  font-family:'Cairo',sans-serif;
-  text-align:center;
+*{box-sizing:border-box}
+body{
+ margin:0;background:#020304;color:#ddd;
+ font-family:monospace;overflow:hidden;
 }
-
-#stars {
-  position:fixed;
-  inset:0;
-  pointer-events:none;
+#scene{
+ height:69vh;width:100%;display:block;
 }
-
-.star {
-  position:absolute;
-  background:white;
-  border-radius:50%;
-  animation:twinkle 2s infinite alternate;
+.info{
+ position:absolute;left:6%;top:8px;
+ color:#888;font-size:11px;line-height:1.7;
 }
-
-@keyframes twinkle {
-  from { opacity:.15; transform:scale(.7); }
-  to { opacity:1; transform:scale(1.4); }
+.info strong{color:#f39bad}
+.editor{
+ height:31vh;border-top:1px solid #333;
+ background:#090b10;padding:12px 14px;
+ overflow:hidden;
 }
-
-.container {
-  position:relative;
-  z-index:2;
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
+.editor-head{
+ display:flex;justify-content:space-between;
+ color:#999;font-size:11px;
+ border-bottom:1px solid #292b33;
+ padding-bottom:9px;
 }
-
-.date {
-  color:#e6a8cb;
-  letter-spacing:5px;
-  font-family:'Playfair Display',serif;
-  font-size:19px;
+.code{
+ padding-top:12px;font-size:11px;
+ line-height:1.9;color:#aeb6c8;
+ white-space:pre-wrap;
 }
-
-h1 {
-  font-size:clamp(35px,9vw,58px);
-  margin:15px 0;
-  background:linear-gradient(90deg,#fff,#ff9fc9,#fff);
-  -webkit-background-clip:text;
-  color:transparent;
+.pink{color:#df8ca9}
+.green{color:#76bd86}
+.blue{color:#8cb8ed}
+#caption{
+ position:absolute;top:12px;right:15px;
+ color:#dca0b5;font-size:12px;
+ letter-spacing:2px;
 }
-
-.subtitle {
-  color:#cbb9d5;
-  font-size:15px;
-  margin-bottom:30px;
-}
-
-button {
-  border:1px solid #e89ac2;
-  background:linear-gradient(120deg,#a83269,#682c76);
-  color:white;
-  padding:14px 32px;
-  border-radius:40px;
-  font-family:inherit;
-  font-size:16px;
-  cursor:pointer;
-  box-shadow:0 0 25px #d34b9150;
-  transition:.3s;
-}
-
-button:hover {
-  transform:scale(1.07);
-  box-shadow:0 0 35px #f77bb5;
-}
-
-#gift {
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  animation:appear 1.5s ease;
-}
-
-@keyframes appear {
-  from { opacity:0; transform:translateY(25px); }
-  to { opacity:1; transform:translateY(0); }
-}
-
-/* Animated rose */
-
-.rose {
-  position:relative;
-  width:180px;
-  height:230px;
-  margin:10px auto 0;
-  animation:grow 2s ease forwards;
-  transform-origin:bottom;
-}
-
-@keyframes grow {
-  from { transform:scale(.1); opacity:0; }
-  to { transform:scale(1); opacity:1; }
-}
-
-.stem {
-  position:absolute;
-  width:5px;
-  height:125px;
-  background:linear-gradient(#70c978,#174b31);
-  left:88px;
-  top:83px;
-  border-radius:10px;
-}
-
-.leaf {
-  position:absolute;
-  width:48px;
-  height:22px;
-  background:linear-gradient(90deg,#176d3e,#55b86a);
-  border-radius:100% 0 100% 0;
-}
-
-.leaf.one {
-  left:42px;
-  top:145px;
-  transform:rotate(25deg);
-}
-
-.leaf.two {
-  left:89px;
-  top:120px;
-  transform:rotate(180deg);
-}
-
-.flower {
-  position:absolute;
-  left:51px;
-  top:16px;
-  width:80px;
-  height:80px;
-  animation:sway 3s ease-in-out infinite alternate;
-  transform-origin:bottom center;
-}
-
-.petal {
-  position:absolute;
-  width:42px;
-  height:60px;
-  background:linear-gradient(145deg,#ffb0c9,#e20b4c 70%,#81052f);
-  border-radius:50% 50% 40% 40%;
-  left:19px;
-  top:0;
-  transform-origin:bottom center;
-  box-shadow:0 0 16px #ff174d55;
-}
-
-.petal:nth-child(1) { transform:rotate(0deg); }
-.petal:nth-child(2) { transform:rotate(72deg); }
-.petal:nth-child(3) { transform:rotate(144deg); }
-.petal:nth-child(4) { transform:rotate(216deg); }
-.petal:nth-child(5) { transform:rotate(288deg); }
-
-.center {
-  position:absolute;
-  background:#8e092b;
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  top:25px;
-  left:25px;
-  box-shadow:0 0 15px #ffb0c9;
-}
-
-@keyframes sway {
-  from { transform:rotate(-5deg); }
-  to { transform:rotate(5deg); }
-}
-
-.message {
-  max-width:440px;
-  min-height:125px;
-  line-height:2.1;
-  color:#f7dce9;
-  font-size:15px;
-  margin:10px auto;
-  padding:15px;
-}
-
-.signature {
-  color:#ff9bc5;
-  font-family:'Playfair Display',serif;
-  font-size:23px;
-  margin-top:8px;
-}
-
-.heart {
-  position:fixed;
-  bottom:-30px;
-  color:#ff80b7;
-  pointer-events:none;
-  animation:float 6s linear forwards;
-  z-index:5;
-}
-
-@keyframes float {
-  to {
-    transform:translateY(-110vh) rotate(360deg);
-    opacity:0;
-  }
-}
-
-footer {
-  color:#806e90;
-  font-size:11px;
-  margin-top:20px;
-}
-
 </style>
 </head>
-
 <body>
 
-<div id="stars"></div>
+<canvas id="scene"></canvas>
 
-<main class="container">
+<div class="info">
+ <strong>@ 11:11 — 2026</strong><br>
+ BLOOMING A LITTLE WISH<br>
+ FOR SOMEONE SPECIAL
+</div>
 
-  <section id="intro">
-    <div class="date">11 / 11 / 2026</div>
-    <h1>11:11</h1>
-    <div class="subtitle">
-      Some moments deserve to be eternal...
-      <br>
-      وهناك أشياء جميلة لا تكفي الكلمات لوصفها.
-    </div>
+<div id="caption">11 : 11 ✦</div>
 
-    <button onclick="openGift()">
-      افتحي هديتك ♥
-    </button>
-  </section>
-
-  <section id="gift">
-
-    <div class="date">A LITTLE GIFT FOR YOU</div>
-
-    <div class="rose">
-      <div class="stem"></div>
-      <div class="leaf one"></div>
-      <div class="leaf two"></div>
-
-      <div class="flower">
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="center"></div>
-      </div>
-    </div>
-
-    <h1>إلى أجمل صدفة</h1>
-
-    <div class="message" id="message"></div>
-
-    <div class="signature">
-      With love, always ♡
-    </div>
-
-    <footer>
-      Made with love • 11:11
-    </footer>
-
-  </section>
-
-</main>
+<div class="editor">
+ <div class="editor-head">
+  <span>✿ rose.py</span>
+  <span>RUNNING · 30 FPS</span>
+ </div>
+ <div class="code" id="code">
+<span class="pink">def</span> bloom():
+    <span class="green"># a little gift for you</span>
+    petals = create_rose()
+    stars = light_up_the_sky()
+    <span class="pink">return</span> beautiful_moments
+ </div>
+</div>
 
 <script>
+const canvas=document.getElementById("scene");
+const ctx=canvas.getContext("2d");
+let W,H,stars=[],start=performance.now();
 
-// Create the stars
-const stars = document.getElementById('stars');
+function resize(){
+ W=canvas.width=innerWidth;
+ H=canvas.height=innerHeight*.69;
+ stars=Array.from({length:130},()=>({
+  x:Math.random()*W,
+  y:Math.random()*H,
+  r:Math.random()*1.5+.3,
+  p:Math.random()*6
+ }));
+}
+resize();
+addEventListener("resize",resize);
 
-for(let i=0; i<110; i++){
-  const s=document.createElement('div');
-  s.className='star';
-  s.style.left=Math.random()*100+'%';
-  s.style.top=Math.random()*100+'%';
-  s.style.width=(Math.random()*3+1)+'px';
-  s.style.height=s.style.width;
-  s.style.animationDelay=Math.random()*3+'s';
-  stars.appendChild(s);
+const art=document.createElement("canvas");
+art.width=420;art.height=520;
+const a=art.getContext("2d");
+
+function drawRose(t){
+ a.clearRect(0,0,420,520);
+ a.save();
+ const growth=Math.min(1,t/7);
+ a.translate(210,280);
+ a.scale(growth,growth);
+
+ // Stem
+ a.strokeStyle="#47a66b";
+ a.lineWidth=7;
+ a.lineCap="round";
+ a.beginPath();
+ a.moveTo(0,0);
+ a.bezierCurveTo(-8,80,10,145,0,210);
+ a.stroke();
+
+ // Leaves
+ function leaf(x,y,angle){
+  a.save();
+  a.translate(x,y);
+  a.rotate(angle);
+  a.fillStyle="#31975c";
+  a.beginPath();
+  a.moveTo(0,0);
+  a.bezierCurveTo(-55,-55,-75,5,0,12);
+  a.bezierCurveTo(40,-15,30,-35,0,0);
+  a.fill();
+  a.restore();
+ }
+ leaf(-2,105,2.8);
+ leaf(2,155,.4);
+
+ // Flower petals
+ const bloom=Math.min(1,t/11);
+ a.translate(0,-25);
+ a.scale(.25+.75*bloom,.25+.75*bloom);
+
+ for(let layer=0;layer<3;layer++){
+  for(let i=0;i<9;i++){
+   a.save();
+   a.rotate(i*Math.PI*2/9+layer*.2);
+   a.translate(0,-layer*5);
+   let g=a.createLinearGradient(0,-65,0,0);
+   g.addColorStop(0,"#ff9aaf");
+   g.addColorStop(.5,layer===0?"#e72752":"#b30c36");
+   g.addColorStop(1,"#51051e");
+   a.fillStyle=g;
+   a.beginPath();
+   a.moveTo(0,0);
+   a.bezierCurveTo(-55,-30,-35,-92,0,-83);
+   a.bezierCurveTo(42,-92,55,-30,0,0);
+   a.fill();
+   a.restore();
+  }
+ }
+
+ // Rose center
+ a.fillStyle="#710b28";
+ a.beginPath();
+ a.arc(0,-35,17,0,Math.PI*2);
+ a.fill();
+ a.restore();
+ a.restore();
 }
 
-// Your personal message
-const text =
-`في يوم 11:11 حبيت أصنع لك شيئاً مختلفاً،
-شيئاً يبقى ذكرى جميلة عندك.
+const chars=" .:-=+*#%@";
 
-يمكن هذه مجرد صفحة صغيرة صنعتها بالبرمجة،
-لكن كل تفصيلة فيها اخترتها لتكون هدية مميزة لك.
+function render(now){
+ const time=(now-start)/1000;
+ ctx.fillStyle="#020304";
+ ctx.fillRect(0,0,W,H);
 
-أتمنى أن تكون أيامك مليئة بالفرح،
-وأن لا تفقدي أبداً تلك الابتسامة الجميلة.
+ // Stars
+ for(const s of stars){
+  const alpha=.25+.7*(.5+.5*Math.sin(time*2+s.p));
+  ctx.globalAlpha=alpha;
+  ctx.fillStyle="#e8e6ff";
+  ctx.fillRect(s.x,s.y,s.r,s.r);
+ }
+ ctx.globalAlpha=1;
 
-شكراً لأنك شخص مميز في حياتي.
-كل عام وأنتِ بخير، وكل 11:11 وأنتِ بخير. ♥`;
+ // Rose animation
+ drawRose(time);
 
-let index=0;
+ const scale=Math.min(W/420,H/520);
+ const cw=420,ch=520;
+ const data=a.getImageData(0,0,cw,ch).data;
+ const step=5;
+ const cell=6.2;
+ const ox=(W-cw*scale)/2;
+ const oy=(H-ch*scale)/2;
 
-function openGift(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('gift').style.display='flex';
+ ctx.save();
+ ctx.translate(ox,oy);
+ ctx.scale(scale,scale);
+ ctx.font="6px monospace";
+ ctx.textBaseline="top";
 
-  const message=document.getElementById('message');
+ for(let y=0;y<ch;y+=step){
+  for(let x=0;x<cw;x+=step){
+   const k=(y*cw+x)*4;
+   const alpha=data[k+3];
+   if(alpha<65)continue;
 
-  const timer=setInterval(()=>{
-    if(index<text.length){
-      message.innerHTML += text[index]==='\n' ? '<br>' :
-        text[index].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      index++;
-    }else{
-      clearInterval(timer);
-    }
-  },65);
+   const r=data[k],g=data[k+1],b=data[k+2];
+   const brightness=(r+g+b)/3;
+   const char=chars[Math.min(9,Math.floor(brightness/26))];
 
-  setInterval(createHeart,500);
+   ctx.fillStyle=`rgba(${r},${g},${b},${alpha/255})`;
+   ctx.fillText(char,x,y);
+  }
+ }
+ ctx.restore();
+ requestAnimationFrame(render);
 }
 
-function createHeart(){
-  const heart=document.createElement('div');
-  heart.className='heart';
-  heart.innerHTML='♥';
-  heart.style.left=Math.random()*100+'%';
-  heart.style.fontSize=(12+Math.random()*20)+'px';
-  document.body.appendChild(heart);
+requestAnimationFrame(render);
 
-  setTimeout(()=>heart.remove(),6000);
-}
-
+// Reveal a personal message
+setTimeout(()=>{
+ document.getElementById("code").innerHTML=
+ `<span class="pink">def</span> special_day():
+    <span class="green"># November 11</span>
+    a_rose_for_you = True
+    a_wish_for_you = "Happiness"
+    <span class="blue">print</span>("You are special ♡")`;
+},9000);
 </script>
 </body>
 </html>
