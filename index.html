@@ -3,324 +3,319 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>I LOVE YOU — 11:11</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I LOVE YOU</title>
+
 <style>
-*{box-sizing:border-box}
-html,body{
- margin:0;width:100%;height:100%;
- background:#000;overflow:hidden;
- color:#ddd;font-family:monospace;
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html,body {
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#020203;
 }
-#stage{
- height:72%;
- width:100%;
- position:relative;
- background:#000;
-}
-canvas{
- width:100%;height:100%;display:block;
-}
-.hud{
- position:absolute;left:12px;bottom:12px;
- color:#85858b;font-size:10px;
- line-height:1.7;
-}
-.clock{
- position:absolute;right:14px;top:13px;
- font-size:10px;color:#e58ca9;
-}
-#terminal{
- height:28%;
- background:#080808;
- border-top:1px solid #383838;
- overflow:hidden;
- position:relative;
-}
-.topbar{
- height:30px;padding:8px 12px;
- border-bottom:1px solid #252525;
- color:#85858b;font-size:10px;
- display:flex;justify-content:space-between;
-}
-#code{
- padding:9px 12px;
- font-size:10px;
- line-height:1.85;
- color:#a9a9b4;
- white-space:pre;
-}
-.line{
- display:flex;
- gap:12px;
- min-height:18px;
-}
-.num{color:#555;min-width:20px;text-align:right}
-.pink{color:#e78baa}
-.green{color:#78bd8a}
-.blue{color:#87aee9}
-.gold{color:#d8c18a}
-.active{
- background:linear-gradient(90deg,#38202b,#141014);
- border-left:2px solid #e78baa;
+
+canvas {
+  display:block;
+  width:100%;
+  height:100%;
 }
 </style>
 </head>
+
 <body>
-
-<div id="stage">
- <canvas id="art"></canvas>
-
- <div class="clock">● 11:11 <span id="time">00.00s</span></div>
-
- <div class="hud">
-  @ 11:11 · 2026<br>
-  bloom <span id="bloom">0.0</span>% &nbsp;
-  petals 36<br>
-  message: I LOVE YOU
- </div>
-</div>
-
-<div id="terminal">
- <div class="topbar">
-  <span>$ py love.py</span>
-  <span style="color:#78bd8a">● running · 30 fps</span>
- </div>
- <div id="code"></div>
-</div>
+<canvas id="rose"></canvas>
 
 <script>
-const canvas=document.getElementById("art");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("rose");
+const ctx = canvas.getContext("2d");
 
-let W,H,D,start=performance.now();
-let stars=[];
-let codeIndex=0;
-
-const phrase="I LOVE YOU";
-const repeat="I LOVE YOU  ";
-const lines=[
-['# 11:11 — a flower made of words','green'],
-['import numpy as np','blue'],
-['import time','blue'],
-['MESSAGE = "I LOVE YOU"','pink'],
-['PETALS = 36','gold'],
-['',''],
-['def create_petal(angle, size):','pink'],
-['    shape = elliptical_curve(angle)',''],
-['    letters = repeat(MESSAGE)','gold'],
-['    return fill(shape, letters)','pink'],
-['',''],
-['def open_flower(t):','pink'],
-['    bloom = smoothstep(t)',''],
-['    petals = unfold(PETALS, bloom)',''],
-['    return draw_rose(petals)','pink'],
-['',''],
-['def grow_stem():','pink'],
-['    leaves = form_with_letters(MESSAGE)','gold'],
-['    return green_stem(leaves)','green'],
-['',''],
-['# Every letter becomes a petal.','green'],
-['# Every petal becomes a wish.','green'],
-['print("I LOVE YOU")','blue'],
-];
+let W,H,D,stars=[];
+let start = performance.now();
 
 function resize(){
- D=Math.min(devicePixelRatio||1,2);
- W=canvas.clientWidth;
- H=canvas.clientHeight;
- canvas.width=W*D;
- canvas.height=H*D;
- ctx.setTransform(D,0,0,D,0,0);
+  D = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth;
+  H = innerHeight;
 
- stars=Array.from({length:125},()=>({
-  x:Math.random()*W,
-  y:Math.random()*H,
-  r:.4+Math.random()*1.1,
-  phase:Math.random()*6,
-  speed:.8+Math.random()*2
- }));
+  canvas.width = W*D;
+  canvas.height = H*D;
+  ctx.setTransform(D,0,0,D,0,0);
+
+  stars = Array.from({length:130},()=>({
+    x:Math.random()*W,
+    y:Math.random()*H,
+    r:Math.random()*1.3+.3,
+    phase:Math.random()*6
+  }));
 }
-new ResizeObserver(resize).observe(canvas);
+addEventListener("resize",resize);
 resize();
 
-function textFillEllipse(cx,cy,rx,ry,rotation,progress,color){
- if(progress<=0)return;
+const phrase = "I LOVE YOU";
+const phraseLong = "I LOVE YOU  ·  ";
 
- ctx.save();
- ctx.translate(cx,cy);
- ctx.rotate(rotation);
- ctx.beginPath();
- ctx.ellipse(0,0,rx*progress,ry*progress,0,0,Math.PI*2);
- ctx.clip();
-
- const font=Math.max(5,Math.min(8, W/55));
- ctx.font="bold "+font+"px monospace";
- ctx.textAlign="center";
- ctx.textBaseline="middle";
- ctx.fillStyle=color;
-
- for(let y=-ry;y<ry;y+=font+2){
-  const shift=(Math.floor((y+ry)/10)%2)*14;
-  for(let x=-rx;x<rx;x+=68){
-   ctx.fillText(repeat,x+shift,y);
-  }
- }
-
- ctx.restore();
+function roundedPetalPath(w,h){
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.bezierCurveTo(-w*.35,-h*.12,-w*1.1,-h*.62,-w*.48,-h*.88);
+  ctx.bezierCurveTo(-w*.15,-h*1.08,w*.45,-h*1.05,w*.62,-h*.70);
+  ctx.bezierCurveTo(w*1.02,-h*.35,w*.35,-h*.10,0,0);
+  ctx.closePath();
 }
 
-function drawRose(t){
- const scale=Math.min(W/440,H/520);
- const cx=W/2;
- const cy=H*.43;
- const grow=Math.min(1,Math.max(0,t/9));
+function petal(x,y,angle,w,h,progress,color,seed){
+  if(progress<=0)return;
 
- ctx.save();
- ctx.translate(cx,cy);
- ctx.scale(scale,scale);
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.scale(progress,progress);
 
- // Stem: built from repeating words
- const stemProgress=Math.min(1,t/4);
- if(stemProgress>0){
+  roundedPetalPath(w,h);
+
+  const gradient=ctx.createLinearGradient(-w,-h,w,0);
+  gradient.addColorStop(0,"#68051d");
+  gradient.addColorStop(.25,color);
+  gradient.addColorStop(.55,"#ff789c");
+  gradient.addColorStop(.82,"#c31647");
+  gradient.addColorStop(1,"#500018");
+
+  ctx.fillStyle=gradient;
+  ctx.shadowColor="#fa174d";
+  ctx.shadowBlur=8;
+  ctx.fill();
+
+  ctx.shadowBlur=0;
+
+  // Repeated words inside the actual petal
+  ctx.save();
+  roundedPetalPath(w,h);
+  ctx.clip();
+
+  ctx.font="bold 7px monospace";
+  ctx.textAlign="center";
+  ctx.fillStyle="rgba(255,221,231,.82)";
+
+  for(let row=0;row<12;row++){
+    const yy=-h+row*9;
+    const offset=(row%2)*18;
+
+    for(let xx=-w*1.5;xx<w*1.5;xx+=68){
+      ctx.fillText(phraseLong,xx+offset,yy);
+    }
+  }
+  ctx.restore();
+
+  // Petal central vein
+  ctx.beginPath();
+  ctx.moveTo(0,-3);
+  ctx.quadraticCurveTo(-w*.15,-h*.4,w*.04,-h*.82);
+  ctx.strokeStyle="rgba(255,189,205,.35)";
+  ctx.lineWidth=.7;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawFlower(cx,cy,t){
+  const outer = [
+    {n:9,w:35,h:100,dist:25,delay:0},
+    {n:8,w:31,h:85,dist:16,delay:1.2},
+    {n:7,w:25,h:67,dist:8,delay:2.3},
+    {n:6,w:19,h:48,dist:3,delay:3.2}
+  ];
+
+  // Back petals first
+  outer.forEach((layer,L)=>{
+    for(let i=0;i<layer.n;i++){
+      const delay=layer.delay+i*.12;
+      const p=ease((t-delay)/5);
+
+      if(p<=0)continue;
+
+      const angle=(i/layer.n)*Math.PI*2+
+                  L*.31+Math.PI/2;
+
+      const distance=layer.dist*p;
+      const x=cx+Math.cos(angle)*distance;
+      const y=cy+Math.sin(angle)*distance;
+
+      petal(
+        x,y,angle,
+        layer.w,layer.h,
+        p,
+        L%2===0?"#e72a55":"#ba123c",
+        i
+      );
+    }
+  });
+
+  // Inner curled petals
+  for(let i=0;i<5;i++){
+    const p=ease((t-4-i*.35)/4);
+    if(p<=0)continue;
+
+    const angle=i*Math.PI*2/5+t*.035;
+    const x=cx+Math.cos(angle)*8*p;
+    const y=cy+Math.sin(angle)*8*p;
+
+    petal(x,y,angle,15,36,p,"#ed456b",i);
+  }
+
+  // Rose spiral center
+  const center=ease((t-5)/4);
+
+  if(center>0){
+    ctx.save();
+    ctx.translate(cx,cy);
+
+    ctx.beginPath();
+    for(let i=0;i<180;i++){
+      const a=i*.12;
+      const r=.3+i*.052;
+      const x=Math.cos(a)*r;
+      const y=Math.sin(a)*r*.83;
+
+      if(i===0)ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+
+    ctx.strokeStyle="#ffb0c4";
+    ctx.lineWidth=2;
+    ctx.shadowColor="#ff174d";
+    ctx.shadowBlur=13;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+function ease(v){
+  v=Math.max(0,Math.min(1,v));
+  return v*v*(3-2*v);
+}
+
+function leaf(x,y,angle,scale){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.scale(scale,scale);
+
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.bezierCurveTo(-20,-38,-90,-45,-76,-5);
+  ctx.bezierCurveTo(-62,25,-22,24,0,0);
+
+  const g=ctx.createLinearGradient(-70,-30,0,15);
+  g.addColorStop(0,"#164d2a");
+  g.addColorStop(.5,"#42aa60");
+  g.addColorStop(1,"#0c3a20");
+
+  ctx.fillStyle=g;
+  ctx.shadowColor="#174f2c";
+  ctx.shadowBlur=10;
+  ctx.fill();
+
+  ctx.shadowBlur=0;
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(0,0);
-  ctx.bezierCurveTo(-8,70,9,145,0,230*stemProgress);
-  ctx.strokeStyle="#319b59";
-  ctx.lineWidth=3;
-  ctx.stroke();
+  ctx.bezierCurveTo(-25,-12,-48,-13,-70,-8);
+  ctx.clip();
 
   ctx.font="bold 7px monospace";
   ctx.textAlign="center";
-  ctx.fillStyle="#80d59a";
+  ctx.fillStyle="#c0edbd";
 
-  for(let y=25;y<220*stemProgress;y+=12){
-   ctx.fillText("I LOVE YOU",0,y);
+  for(let i=0;i<5;i++){
+    ctx.fillText(phrase,-40,-22+i*9);
   }
   ctx.restore();
- }
 
- // Leaves made from words
- const leafProgress=Math.min(1,Math.max(0,(t-2)/3));
-
- if(leafProgress>0){
-  textFillEllipse(-26,105,49,17,-.55,leafProgress,"#45b96e");
-  textFillEllipse(27,159,48,16,.55,leafProgress,"#279b55");
- }
-
- // Outer petals
- const layers=[
-  {n:12,rx:25,ry:76,dist:48,delay:0},
-  {n:10,rx:23,ry:63,dist:32,delay:1.5},
-  {n:8,rx:19,ry:48,dist:18,delay:3},
-  {n:6,rx:15,ry:34,dist:7,delay:4}
- ];
-
- layers.forEach((layer,L)=>{
-  for(let i=0;i<layer.n;i++){
-   const delay=layer.delay+i*.13;
-   const p=Math.max(0,Math.min(1,(t-delay)/5));
-   if(p<=0)continue;
-
-   const angle=i*Math.PI*2/layer.n+L*.24+t*.025;
-   const x=Math.cos(angle)*layer.dist*p;
-   const y=Math.sin(angle)*layer.dist*p-12;
-
-   const colors=[
-    "#e36c91","#ff9bb5",
-    "#ed416d","#bd204d"
-   ];
-
-   textFillEllipse(
-    x,y,layer.rx,layer.ry,
-    -angle,p,colors[L]
-   );
-  }
- });
-
- // Center of the flower
- const center=Math.min(1,Math.max(0,(t-5)/3));
- if(center>0){
   ctx.beginPath();
-  ctx.arc(0,-12,15*center,0,Math.PI*2);
-  ctx.fillStyle="#8f1239";
-  ctx.fill();
+  ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(-35,-12,-69,-9);
+  ctx.strokeStyle="#9bdda0";
+  ctx.lineWidth=1;
+  ctx.stroke();
 
-  ctx.fillStyle="#ffd0dd";
-  ctx.font="bold 7px monospace";
-  ctx.textAlign="center";
-  ctx.fillText("LOVE",0,-10);
- }
-
- ctx.restore();
- return grow;
+  ctx.restore();
 }
 
-function sparkle(x,y,r,alpha){
- ctx.save();
- ctx.globalAlpha=alpha;
- ctx.strokeStyle="#ddd9ed";
- ctx.lineWidth=.65;
- ctx.beginPath();
- ctx.moveTo(x-r*2,y);
- ctx.lineTo(x+r*2,y);
- ctx.moveTo(x,y-r*2);
- ctx.lineTo(x,y+r*2);
- ctx.stroke();
- ctx.beginPath();
- ctx.arc(x,y,r*.5,0,Math.PI*2);
- ctx.fillStyle="#fff";
- ctx.fill();
- ctx.restore();
+function drawStem(cx,top,bottom,t){
+  const p=ease(t/4);
+  if(p<=0)return;
+
+  const end=top+(bottom-top)*p;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx,top);
+  ctx.bezierCurveTo(cx-8,top+100,cx+13,bottom-100,end);
+  ctx.strokeStyle="#21864b";
+  ctx.lineWidth=5;
+  ctx.lineCap="round";
+  ctx.stroke();
+
+  ctx.font="bold 8px monospace";
+  ctx.textAlign="center";
+  ctx.fillStyle="#8bd99c";
+
+  for(let y=top+30;y<end;y+=13){
+    ctx.fillText(phrase,cx+2,y);
+  }
+
+  ctx.restore();
+
+  if(t>2){
+    const lp=ease((t-2)/3);
+    leaf(cx-3,top+115,2.7,lp);
+    leaf(cx+3,top+185,.45,lp);
+    leaf(cx-3,top+260,2.8,lp*.8);
+  }
+}
+
+function drawStars(t){
+  stars.forEach(s=>{
+    const alpha=.15+.75*(.5+.5*Math.sin(t*1.5+s.phase));
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle="#fff";
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+  });
+  ctx.globalAlpha=1;
 }
 
 function render(now){
- const t=(now-start)/1000;
- ctx.clearRect(0,0,W,H);
+  const t=(now-start)/1000;
 
- // Star field
- stars.forEach(s=>{
-  const alpha=.15+.8*(.5+.5*Math.sin(t*s.speed+s.phase));
-  ctx.fillStyle=`rgba(235,230,255,${alpha})`;
-  ctx.fillRect(s.x,s.y,s.r,s.r);
- });
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#020203";
+  ctx.fillRect(0,0,W,H);
 
- // Special sparkling stars
- for(let i=0;i<12;i++){
-  const s=stars[i*7];
-  sparkle(s.x,s.y,2+Math.sin(t+i)*1.2,
-    .25+.5*Math.sin(t*1.5+i)**2);
- }
+  drawStars(t);
 
- const bloom=drawRose(t);
- document.getElementById("bloom").textContent=
-  (bloom*100).toFixed(1);
- document.getElementById("time").textContent=
-  t.toFixed(2)+"s";
+  const size=Math.min(W/390,H/740,1.25);
+  const cx=W/2;
+  const cy=H*.38;
 
- requestAnimationFrame(render);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.scale(size,size);
+
+  drawStem(0,95,360,t);
+
+  drawFlower(0,0,t);
+
+  ctx.restore();
+
+  requestAnimationFrame(render);
 }
+
 requestAnimationFrame(render);
-
-// Code editor animation
-function showCode(){
- const box=document.getElementById("code");
- let html="";
- for(let i=0;i<8;i++){
-  const index=(codeIndex+i)%lines.length;
-  const [content,color]=lines[index];
-  const cls=color||"";
-  html+=`<div class="line ${i===0?'active':''}">
-  <span class="num">${String(index+1).padStart(3," ")}</span>
-  <span class="${cls}">${content||"&nbsp;"}</span>
-  </div>`;
- }
- box.innerHTML=html;
- codeIndex=(codeIndex+1)%lines.length;
-}
-showCode();
-setInterval(showCode,850);
 </script>
 </body>
 </html>
