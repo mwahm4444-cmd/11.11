@@ -7,14 +7,12 @@
 <title>1 Rose, Every Language</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
-    background: #000;
-    min-height: 100vh;
+    background: #030303;
+    height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -24,38 +22,17 @@ body {
 }
 
 h1 {
-    color: #ff3344;
+    color: #ff334d;
     font-size: clamp(18px, 5vw, 25px);
     letter-spacing: 2px;
-    text-align: center;
-    text-shadow: 0 0 12px #ff1744;
-    margin: 0 0 12px;
+    text-shadow: 0 0 15px #ff1744;
+    margin: 0 0 8px;
 }
 
 #canvas {
-    position: relative;
     width: min(96vw, 440px);
     height: min(82vh, 570px);
-}
-
-.word {
-    position: absolute;
-    white-space: nowrap;
-    transform: translate(-50%, -50%);
-    font-size: 9px;
-    opacity: 0;
-    pointer-events: none;
-    line-height: 1;
-}
-
-.red {
-    color: #ff294e;
-    text-shadow: 0 0 5px rgba(255, 30, 70, .55);
-}
-
-.green {
-    color: #00dc79;
-    text-shadow: 0 0 4px rgba(0, 230, 118, .5);
+    display: block;
 }
 </style>
 </head>
@@ -63,9 +40,15 @@ h1 {
 <body>
 
 <h1>1 Rose, Every Language</h1>
-<div id="canvas"></div>
+<canvas id="canvas"></canvas>
 
 <script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const W = 440;
+const H = 570;
+
 const phrases = [
     "I LOVE YOU",
     "Te amo",
@@ -84,178 +67,534 @@ const phrases = [
     "我爱你"
 ];
 
-const canvas = document.getElementById("canvas");
+const items = [];
+const occupied = [];
 
 const CX = 220;
-const CY = 205;
+const CY = 155;
 
-const sequence = [];
+let current = 0;
+let started = false;
 
-function addWord(x, y, color) {
-    const el = document.createElement("div");
+const random = arr =>
+    arr[Math.floor(Math.random() * arr.length)];
 
-    el.className = "word " + color;
-    el.textContent =
-        phrases[Math.floor(Math.random() * phrases.length)];
+function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
 
-    el.style.left = x + "px";
-    el.style.top = y + "px";
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
 
-    sequence.push(el);
+    ctx.setTransform(
+        canvas.width / W, 0,
+        0, canvas.height / H,
+        0, 0
+    );
+
+    draw();
 }
 
-// =====================================
-// 1. ROOTS - الجذور
-// =====================================
+window.addEventListener("resize", resize);
 
-function createRoot(side) {
-    const count = 22;
+// ======================================
+// WORD SYSTEM
+// ======================================
 
-    for (let i = 0; i < count; i++) {
-        const t = i / (count - 1);
+function addWord(x, y, color, size = 8.2) {
 
-        addWord(
-            CX + side * (8 + t * 65),
-            CY + 260 + t * 55,
-            "green"
+    ctx.font = `${size}px Georgia`;
+
+    const phrase = random(phrases);
+    const width = ctx.measureText(phrase).width;
+
+    const left = x - width / 2;
+    const right = x + width / 2;
+
+    // منع تداخل الكلمات
+    for (const box of occupied) {
+        if (
+            left < box.right + 3 &&
+            right > box.left - 3 &&
+            y - 5 < box.bottom + 2 &&
+            y + 5 > box.top - 2
+        ) {
+            return false;
+        }
+    }
+
+    occupied.push({
+        left,
+        right,
+        top: y - 5,
+        bottom: y + 5
+    });
+
+    items.push({
+        x, y, phrase, color, size,
+        alpha: 0
+    });
+
+    return true;
+}
+
+// ======================================
+// CURVED PATH WORDS
+// ======================================
+
+function addPathWords(points, color, size = 8.2) {
+
+    let lastX = -1000;
+    let lastY = -1000;
+
+    for (const p of points) {
+
+        const distance = Math.hypot(
+            p.x - lastX,
+            p.y - lastY
         );
+
+        if (distance < 13) continue;
+
+        if (addWord(p.x, p.y, color, size)) {
+            lastX = p.x;
+            lastY = p.y;
+        }
     }
 }
 
+// ======================================
+// 1. ROOTS
+// ======================================
+
+function createRoot(side) {
+
+    const points = [];
+
+    for (let i = 0; i <= 100; i++) {
+
+        const t = i / 100;
+
+        points.push({
+            x: CX + side * (
+                5 + 92 * t
+            ),
+            y: 440 + 65 * t -
+                13 * Math.sin(t * Math.PI)
+        });
+    }
+
+    addPathWords(points, "#00e676");
+}
+
+// الجذور الجانبية
 createRoot(-1);
 createRoot(1);
 
 // الجذر الأوسط
-for (let i = 0; i < 20; i++) {
-    addWord(
-        CX + Math.sin(i * .13) * 3,
-        CY + 250 + i * 2.5,
-        "green"
-    );
-}
-
-// =====================================
-// 2. STEM - الساق
-// =====================================
-
-for (let i = 0; i < 32; i++) {
-    const t = i / 31;
-
-    addWord(
-        CX + Math.sin(t * 2.5) * 4,
-        CY + 245 - t * 145,
-        "green"
-    );
-}
-
-// =====================================
-// 3. LEAVES - الأوراق
-// =====================================
-
-function createLeaf(side) {
-    const count = 20;
-
-    for (let i = 0; i < count; i++) {
-        const t = i / (count - 1);
-
-        const x = CX + side * t * 85;
-        const y = CY + 165 - t * 42
-            + Math.sin(t * Math.PI) * 15;
-
-        addWord(x, y, "green");
-    }
-}
-
-createLeaf(-1);
-createLeaf(1);
-
-// =====================================
-// 4. ROSE PETALS - البتلات
-// =====================================
-
-// معادلة وردة ذات 8 بتلات
-function roseRadius(angle) {
-    return 102 * Math.abs(Math.cos(4 * angle));
-}
-
-// إنشاء صفوف متوازية داخل شكل الوردة
-const rows = 22;
-const samples = 180;
-
-for (let row = 1; row <= rows; row++) {
-
-    const scale = row / rows;
+{
     const points = [];
 
-    for (let i = 0; i < samples; i++) {
-
-        const angle = (i / samples) * Math.PI * 2;
-
-        const radius = roseRadius(angle) * scale;
+    for (let i = 0; i <= 70; i++) {
+        const t = i / 70;
 
         points.push({
-            x: CX + Math.cos(angle) * radius,
-            y: CY + Math.sin(angle) * radius * 0.82
+            x: CX + Math.sin(t * 5) * 5,
+            y: 442 + t * 83
         });
     }
 
-    // ترتيب نقاط كل صف على مسار منتظم
-    points.sort((a, b) => a.y - b.y);
+    addPathWords(points, "#00e676");
+}
 
-    // تقليل عدد الكلمات للحفاظ على المسافة
-    for (let i = 0; i < points.length; i += 5) {
-        addWord(
-            points[i].x,
-            points[i].y,
-            "red"
+// فروع إضافية للجذور
+for (const side of [-1, 1]) {
+
+    const points = [];
+
+    for (let i = 0; i <= 50; i++) {
+        const t = i / 50;
+
+        points.push({
+            x: CX + side * (35 + t * 65),
+            y: 485 + t * 25
+        });
+    }
+
+    addPathWords(points, "#00c968", 7.8);
+}
+
+// ======================================
+// 2. STEM
+// ======================================
+
+{
+    const points = [];
+
+    for (let i = 0; i <= 200; i++) {
+
+        const t = i / 200;
+
+        points.push({
+            x: CX + Math.sin(t * 2.5) * 7,
+            y: 445 - t * 205
+        });
+    }
+
+    addPathWords(
+        points.reverse(),
+        "#00e676",
+        8.5
+    );
+}
+
+// ======================================
+// 3. LEAVES
+// ======================================
+
+function createLeaf(side, baseY, length) {
+
+    const path = new Path2D();
+
+    path.moveTo(0, 0);
+
+    path.bezierCurveTo(
+        side * length * 0.35, -length * 0.65,
+        side * length * 0.8, -length * 0.65,
+        side * length, -length * 0.35
+    );
+
+    path.bezierCurveTo(
+        side * length * 0.7, length * 0.05,
+        side * length * 0.25, length * 0.12,
+        0, 0
+    );
+
+    // تحويل حدود الورقة إلى كلمات
+    const points = [];
+
+    for (let t = 0; t <= 1; t += 0.035) {
+
+        const x = side * length * t;
+
+        const y = baseY -
+            Math.sin(t * Math.PI) * length * 0.55;
+
+        points.push({ x: CX + x, y });
+    }
+
+    addPathWords(points, "#00e676", 8);
+
+    // عرق الورقة
+    const vein = [];
+
+    for (let i = 0; i <= 35; i++) {
+        const t = i / 35;
+
+        vein.push({
+            x: CX + side * length * t,
+            y: baseY - Math.sin(t * Math.PI) *
+                length * 0.55
+        });
+    }
+
+    addPathWords(vein, "#00b85d", 7.5);
+}
+
+createLeaf(-1, 355, 92);
+createLeaf(1, 355, 92);
+
+createLeaf(-1, 405, 62);
+createLeaf(1, 405, 62);
+
+// ======================================
+// 4. REALISTIC LAYERED PETALS
+// ======================================
+
+const petalLayers = [
+    {
+        count: 7,
+        length: 112,
+        width: 47,
+        offset: 17,
+        size: 8.3,
+        colors: [
+            "#ff1744",
+            "#f8173e",
+            "#ed1237"
+        ]
+    },
+    {
+        count: 6,
+        length: 88,
+        width: 39,
+        offset: 9,
+        size: 8.2,
+        colors: [
+            "#ff3458",
+            "#ff1e49",
+            "#e90b35"
+        ]
+    },
+    {
+        count: 5,
+        length: 61,
+        width: 30,
+        offset: 3,
+        size: 8,
+        colors: [
+            "#ff536b",
+            "#ff294e",
+            "#e90b35"
+        ]
+    }
+];
+
+const petalItems = [];
+
+function createPetal(angle, length, width, offset, layer) {
+
+    const path = new Path2D();
+
+    // شكل البتلة المنحني
+    path.moveTo(0, 12);
+
+    path.bezierCurveTo(
+        -width * 0.95, -length * 0.22,
+        -width * 0.75, -length * 0.82,
+        0, -length
+    );
+
+    path.bezierCurveTo(
+        width * 0.75, -length * 0.82,
+        width * 0.95, -length * 0.22,
+        0, 12
+    );
+
+    const anchorX = CX + Math.sin(angle) * offset;
+    const anchorY = CY - Math.cos(angle) * offset;
+
+    const candidates = [];
+
+    for (
+        let y = -length + 12;
+        y <= 7;
+        y += 10.5
+    ) {
+
+        for (
+            let x = -width * 0.78;
+            x <= width * 0.78;
+            x += 5
+        ) {
+
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+
+            const worldX = anchorX + x * c - y * s;
+            const worldY = anchorY + x * s + y * c;
+
+            const phrase = random(phrases);
+
+            ctx.font = "8px Georgia";
+
+            const textWidth = ctx.measureText(phrase).width;
+
+            // اختبار طرفي الكلمة داخل البتلة
+            function inside(worldPointX) {
+
+                const dx = worldPointX - anchorX;
+                const dy = worldY - anchorY;
+
+                const localX = dx * c + dy * s;
+                const localY = -dx * s + dy * c;
+
+                return ctx.isPointInPath(
+                    path,
+                    localX,
+                    localY
+                );
+            }
+
+            if (
+                inside(worldX - textWidth / 2) &&
+                inside(worldX + textWidth / 2)
+            ) {
+
+                candidates.push({
+                    x: worldX,
+                    y: worldY,
+                    phrase,
+                    color: random(layer.colors),
+                    size: layer.size
+                });
+            }
+        }
+    }
+
+    candidates.sort((a, b) => a.y - b.y);
+
+    for (const p of candidates) {
+
+        if (addWord(
+            p.x,
+            p.y,
+            p.color,
+            p.size
+        )) {
+            petalItems.push(items[items.length - 1]);
+        }
+    }
+}
+
+// بناء طبقات البتلات
+for (let layerIndex = 0;
+     layerIndex < petalLayers.length;
+     layerIndex++) {
+
+    const layer = petalLayers[layerIndex];
+
+    for (let i = 0; i < layer.count; i++) {
+
+        const angle =
+            (i / layer.count) * Math.PI * 2 +
+            layerIndex * 0.28;
+
+        createPetal(
+            angle,
+            layer.length,
+            layer.width,
+            layer.offset,
+            layer
         );
     }
 }
 
-// =====================================
-// 5. CENTER - قلب الوردة
-// =====================================
+// ======================================
+// 5. INNER ROSE SPIRAL
+// ======================================
 
-for (let i = 0; i < 12; i++) {
+const spiralPoints = [];
 
-    const angle = (i / 12) * Math.PI * 2;
+for (let i = 0; i < 180; i++) {
 
-    addWord(
-        CX + Math.cos(angle) * 9,
-        CY + Math.sin(angle) * 8,
-        "red"
-    );
+    const t = i / 180;
+    const angle = t * Math.PI * 5;
+
+    const radius = 3 + t * 24;
+
+    spiralPoints.push({
+        x: CX + Math.cos(angle) * radius,
+        y: CY + Math.sin(angle) * radius * 0.85
+    });
 }
 
-// =====================================
-// 6. ANIMATION - ظهور كلمة كلمة
-// =====================================
+addPathWords(
+    spiralPoints,
+    "#ff667c",
+    8
+);
 
-// العناصر تُضاف بالترتيب:
-// الجذور، الساق، الأوراق، البتلات، القلب
+// ======================================
+// 6. ANIMATION ORDER
+// ======================================
 
-let current = 0;
+// فصل الكلمات حسب موقعها
+const roots = items.filter(p =>
+    p.color.includes("00")
+    && p.y > 440
+);
 
-function showNextWord() {
+const stem = items.filter(p =>
+    p.color.includes("00")
+    && p.y <= 440 &&
+    p.y > 245
+);
 
-    if (current >= sequence.length) return;
+const leaves = items.filter(p =>
+    p.color.includes("00")
+    && p.y <= 440 &&
+    p.y <= 245
+);
 
-    const word = sequence[current];
+// الكلمات الحمراء من أسفل الوردة إلى أعلاها
+const flower = items.filter(p =>
+    !p.color.includes("00")
+).sort((a, b) => b.y - a.y);
 
-    canvas.appendChild(word);
+// ترتيب التكوين
+const animationOrder = [
+    ...roots,
+    ...stem,
+    ...leaves,
+    ...flower
+];
 
-    word.style.transition = "opacity 0.25s ease";
-    word.style.opacity = "1";
+// ======================================
+// 7. DRAW
+// ======================================
+
+function draw() {
+
+    ctx.clearRect(0, 0, W, H);
+
+    for (const item of animationOrder) {
+
+        if (item.alpha <= 0) continue;
+
+        ctx.save();
+
+        ctx.globalAlpha = item.alpha;
+        ctx.font = `${item.size}px Georgia`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = item.color;
+        ctx.fillStyle = item.color;
+
+        ctx.fillText(
+            item.phrase,
+            item.x,
+            item.y
+        );
+
+        ctx.restore();
+    }
+}
+
+// ======================================
+// 8. WORD BY WORD ANIMATION
+// ======================================
+
+function animate() {
+
+    if (current >= animationOrder.length) {
+        started = false;
+        return;
+    }
+
+    const item = animationOrder[current];
+
+    item.alpha = 1;
 
     current++;
 
-    setTimeout(showNextWord, 90);
+    draw();
+
+    setTimeout(animate, 45);
 }
 
-// بدء الرسم
-setTimeout(showNextWord, 700);
+// البداية
+resize();
+
+setTimeout(() => {
+    if (!started) {
+        started = true;
+        animate();
+    }
+}, 700);
 
 </script>
-
 </body>
 </html>
