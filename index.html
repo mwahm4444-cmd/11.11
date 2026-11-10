@@ -7,12 +7,14 @@
 <title>1 Rose, Every Language</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
-    background: #030303;
-    height: 100vh;
+    min-height: 100vh;
+    background: #020202;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -22,17 +24,18 @@ body {
 }
 
 h1 {
-    color: #ff334d;
+    color: #ff294b;
     font-size: clamp(18px, 5vw, 25px);
     letter-spacing: 2px;
-    text-shadow: 0 0 15px #ff1744;
-    margin: 0 0 8px;
+    text-align: center;
+    text-shadow: 0 0 12px #ff1744;
+    margin: 0 0 10px;
 }
 
-#canvas {
+canvas {
+    display: block;
     width: min(96vw, 440px);
     height: min(82vh, 570px);
-    display: block;
 }
 </style>
 </head>
@@ -67,19 +70,37 @@ const phrases = [
     "我爱你"
 ];
 
+const redColors = [
+    "#a90025",
+    "#c4002e",
+    "#e00035",
+    "#f01642",
+    "#ff294e",
+    "#ff4763",
+    "#d90035"
+];
+
+const greenColors = [
+    "#006b37",
+    "#008b43",
+    "#00a94e",
+    "#00c65c",
+    "#00e676"
+];
+
 const items = [];
-const occupied = [];
 
 const CX = 220;
 const CY = 155;
 
-let current = 0;
-let started = false;
+let animationIndex = 0;
+let animationTimer = null;
 
-const random = arr =>
-    arr[Math.floor(Math.random() * arr.length)];
+// ======================================
+// RESPONSIVE CANVAS
+// ======================================
 
-function resize() {
+function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
@@ -95,463 +116,439 @@ function resize() {
     draw();
 }
 
-window.addEventListener("resize", resize);
+window.addEventListener("resize", resizeCanvas);
 
 // ======================================
-// WORD SYSTEM
+// OFFSCREEN MASKS
 // ======================================
 
-function addWord(x, y, color, size = 8.2) {
+function createMask() {
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
 
-    ctx.font = `${size}px Georgia`;
-
-    const phrase = random(phrases);
-    const width = ctx.measureText(phrase).width;
-
-    const left = x - width / 2;
-    const right = x + width / 2;
-
-    // منع تداخل الكلمات
-    for (const box of occupied) {
-        if (
-            left < box.right + 3 &&
-            right > box.left - 3 &&
-            y - 5 < box.bottom + 2 &&
-            y + 5 > box.top - 2
-        ) {
-            return false;
-        }
-    }
-
-    occupied.push({
-        left,
-        right,
-        top: y - 5,
-        bottom: y + 5
-    });
-
-    items.push({
-        x, y, phrase, color, size,
-        alpha: 0
-    });
-
-    return true;
+    return {
+        canvas: c,
+        ctx: c.getContext("2d")
+    };
 }
 
-// ======================================
-// CURVED PATH WORDS
-// ======================================
-
-function addPathWords(points, color, size = 8.2) {
-
-    let lastX = -1000;
-    let lastY = -1000;
-
-    for (const p of points) {
-
-        const distance = Math.hypot(
-            p.x - lastX,
-            p.y - lastY
-        );
-
-        if (distance < 13) continue;
-
-        if (addWord(p.x, p.y, color, size)) {
-            lastX = p.x;
-            lastY = p.y;
-        }
-    }
-}
+const flowerMask = createMask();
+const greenMask = createMask();
 
 // ======================================
-// 1. ROOTS
+// DRAW A NATURAL PETAL
 // ======================================
 
-function createRoot(side) {
+function drawPetal(context, x, y, angle, length, width) {
 
-    const points = [];
+    context.save();
 
-    for (let i = 0; i <= 100; i++) {
-
-        const t = i / 100;
-
-        points.push({
-            x: CX + side * (
-                5 + 92 * t
-            ),
-            y: 440 + 65 * t -
-                13 * Math.sin(t * Math.PI)
-        });
-    }
-
-    addPathWords(points, "#00e676");
-}
-
-// الجذور الجانبية
-createRoot(-1);
-createRoot(1);
-
-// الجذر الأوسط
-{
-    const points = [];
-
-    for (let i = 0; i <= 70; i++) {
-        const t = i / 70;
-
-        points.push({
-            x: CX + Math.sin(t * 5) * 5,
-            y: 442 + t * 83
-        });
-    }
-
-    addPathWords(points, "#00e676");
-}
-
-// فروع إضافية للجذور
-for (const side of [-1, 1]) {
-
-    const points = [];
-
-    for (let i = 0; i <= 50; i++) {
-        const t = i / 50;
-
-        points.push({
-            x: CX + side * (35 + t * 65),
-            y: 485 + t * 25
-        });
-    }
-
-    addPathWords(points, "#00c968", 7.8);
-}
-
-// ======================================
-// 2. STEM
-// ======================================
-
-{
-    const points = [];
-
-    for (let i = 0; i <= 200; i++) {
-
-        const t = i / 200;
-
-        points.push({
-            x: CX + Math.sin(t * 2.5) * 7,
-            y: 445 - t * 205
-        });
-    }
-
-    addPathWords(
-        points.reverse(),
-        "#00e676",
-        8.5
-    );
-}
-
-// ======================================
-// 3. LEAVES
-// ======================================
-
-function createLeaf(side, baseY, length) {
+    context.translate(x, y);
+    context.rotate(angle);
 
     const path = new Path2D();
 
-    path.moveTo(0, 0);
+    path.moveTo(0, 15);
 
     path.bezierCurveTo(
-        side * length * 0.35, -length * 0.65,
-        side * length * 0.8, -length * 0.65,
-        side * length, -length * 0.35
-    );
-
-    path.bezierCurveTo(
-        side * length * 0.7, length * 0.05,
-        side * length * 0.25, length * 0.12,
-        0, 0
-    );
-
-    // تحويل حدود الورقة إلى كلمات
-    const points = [];
-
-    for (let t = 0; t <= 1; t += 0.035) {
-
-        const x = side * length * t;
-
-        const y = baseY -
-            Math.sin(t * Math.PI) * length * 0.55;
-
-        points.push({ x: CX + x, y });
-    }
-
-    addPathWords(points, "#00e676", 8);
-
-    // عرق الورقة
-    const vein = [];
-
-    for (let i = 0; i <= 35; i++) {
-        const t = i / 35;
-
-        vein.push({
-            x: CX + side * length * t,
-            y: baseY - Math.sin(t * Math.PI) *
-                length * 0.55
-        });
-    }
-
-    addPathWords(vein, "#00b85d", 7.5);
-}
-
-createLeaf(-1, 355, 92);
-createLeaf(1, 355, 92);
-
-createLeaf(-1, 405, 62);
-createLeaf(1, 405, 62);
-
-// ======================================
-// 4. REALISTIC LAYERED PETALS
-// ======================================
-
-const petalLayers = [
-    {
-        count: 7,
-        length: 112,
-        width: 47,
-        offset: 17,
-        size: 8.3,
-        colors: [
-            "#ff1744",
-            "#f8173e",
-            "#ed1237"
-        ]
-    },
-    {
-        count: 6,
-        length: 88,
-        width: 39,
-        offset: 9,
-        size: 8.2,
-        colors: [
-            "#ff3458",
-            "#ff1e49",
-            "#e90b35"
-        ]
-    },
-    {
-        count: 5,
-        length: 61,
-        width: 30,
-        offset: 3,
-        size: 8,
-        colors: [
-            "#ff536b",
-            "#ff294e",
-            "#e90b35"
-        ]
-    }
-];
-
-const petalItems = [];
-
-function createPetal(angle, length, width, offset, layer) {
-
-    const path = new Path2D();
-
-    // شكل البتلة المنحني
-    path.moveTo(0, 12);
-
-    path.bezierCurveTo(
-        -width * 0.95, -length * 0.22,
-        -width * 0.75, -length * 0.82,
+        -width * 0.75, 0,
+        -width * 1.05, -length * 0.55,
         0, -length
     );
 
     path.bezierCurveTo(
-        width * 0.75, -length * 0.82,
-        width * 0.95, -length * 0.22,
-        0, 12
+        width * 1.05, -length * 0.55,
+        width * 0.75, 0,
+        0, 15
     );
 
-    const anchorX = CX + Math.sin(angle) * offset;
-    const anchorY = CY - Math.cos(angle) * offset;
+    context.fillStyle = "#fff";
+    context.fill(path);
 
-    const candidates = [];
-
-    for (
-        let y = -length + 12;
-        y <= 7;
-        y += 10.5
-    ) {
-
-        for (
-            let x = -width * 0.78;
-            x <= width * 0.78;
-            x += 5
-        ) {
-
-            const c = Math.cos(angle);
-            const s = Math.sin(angle);
-
-            const worldX = anchorX + x * c - y * s;
-            const worldY = anchorY + x * s + y * c;
-
-            const phrase = random(phrases);
-
-            ctx.font = "8px Georgia";
-
-            const textWidth = ctx.measureText(phrase).width;
-
-            // اختبار طرفي الكلمة داخل البتلة
-            function inside(worldPointX) {
-
-                const dx = worldPointX - anchorX;
-                const dy = worldY - anchorY;
-
-                const localX = dx * c + dy * s;
-                const localY = -dx * s + dy * c;
-
-                return ctx.isPointInPath(
-                    path,
-                    localX,
-                    localY
-                );
-            }
-
-            if (
-                inside(worldX - textWidth / 2) &&
-                inside(worldX + textWidth / 2)
-            ) {
-
-                candidates.push({
-                    x: worldX,
-                    y: worldY,
-                    phrase,
-                    color: random(layer.colors),
-                    size: layer.size
-                });
-            }
-        }
-    }
-
-    candidates.sort((a, b) => a.y - b.y);
-
-    for (const p of candidates) {
-
-        if (addWord(
-            p.x,
-            p.y,
-            p.color,
-            p.size
-        )) {
-            petalItems.push(items[items.length - 1]);
-        }
-    }
+    context.restore();
 }
 
-// بناء طبقات البتلات
-for (let layerIndex = 0;
-     layerIndex < petalLayers.length;
-     layerIndex++) {
+// ======================================
+// BUILD THE ROSE BLOOM
+// ======================================
 
-    const layer = petalLayers[layerIndex];
+function buildFlower() {
 
-    for (let i = 0; i < layer.count; i++) {
+    const c = flowerMask.ctx;
+
+    // Outer petals
+    for (let i = 0; i < 10; i++) {
 
         const angle =
-            (i / layer.count) * Math.PI * 2 +
-            layerIndex * 0.28;
+            i * Math.PI * 2 / 10;
 
-        createPetal(
+        const px =
+            CX + Math.sin(angle) * 10;
+
+        const py =
+            CY - Math.cos(angle) * 10;
+
+        drawPetal(
+            c, px, py,
             angle,
-            layer.length,
-            layer.width,
-            layer.offset,
-            layer
+            112,
+            49
         );
+    }
+
+    // Middle petals
+    for (let i = 0; i < 9; i++) {
+
+        const angle =
+            i * Math.PI * 2 / 9 + 0.22;
+
+        const px =
+            CX + Math.sin(angle) * 5;
+
+        const py =
+            CY - Math.cos(angle) * 5;
+
+        drawPetal(
+            c, px, py,
+            angle,
+            85,
+            40
+        );
+    }
+
+    // Inner petals
+    for (let i = 0; i < 7; i++) {
+
+        const angle =
+            i * Math.PI * 2 / 7 + 0.42;
+
+        const px =
+            CX + Math.sin(angle) * 3;
+
+        const py =
+            CY - Math.cos(angle) * 3;
+
+        drawPetal(
+            c, px, py,
+            angle,
+            60,
+            29
+        );
+    }
+
+    // Small curled petals around the center
+    for (let i = 0; i < 6; i++) {
+
+        const angle =
+            i * Math.PI * 2 / 6;
+
+        drawPetal(
+            c,
+            CX + Math.sin(angle) * 4,
+            CY - Math.cos(angle) * 4,
+            angle,
+            38,
+            19
+        );
+    }
+
+    // Rose center spiral
+    c.save();
+
+    c.strokeStyle = "#fff";
+    c.lineWidth = 12;
+    c.lineCap = "round";
+
+    c.beginPath();
+
+    for (let i = 0; i <= 180; i++) {
+
+        const t = i / 180;
+        const angle = t * Math.PI * 5;
+
+        const radius = 2 + t * 19;
+
+        const x = CX + Math.cos(angle) * radius;
+        const y = CY + Math.sin(angle) * radius;
+
+        if (i === 0) {
+            c.moveTo(x, y);
+        } else {
+            c.lineTo(x, y);
+        }
+    }
+
+    c.stroke();
+    c.restore();
+}
+
+buildFlower();
+
+// ======================================
+// BUILD STEM, LEAVES AND ROOTS
+// ======================================
+
+function buildGreenParts() {
+
+    const c = greenMask.ctx;
+
+    c.fillStyle = "#fff";
+    c.strokeStyle = "#fff";
+
+    // Main curved stem
+    c.lineWidth = 14;
+    c.lineCap = "round";
+
+    c.beginPath();
+    c.moveTo(CX, 240);
+
+    c.bezierCurveTo(
+        211, 310,
+        230, 385,
+        218, 460
+    );
+
+    c.stroke();
+
+    // Leaf shape
+    function leaf(side, y, length) {
+
+        c.save();
+
+        c.translate(CX, y);
+        c.scale(side, 1);
+
+        c.beginPath();
+
+        c.moveTo(0, 0);
+
+        c.bezierCurveTo(
+            18, -length * 0.45,
+            55, -length * 0.85,
+            length, -length * 0.48
+        );
+
+        c.bezierCurveTo(
+            length * 0.8, -length * 0.05,
+            35, length * 0.12,
+            0, 0
+        );
+
+        c.fill();
+
+        // Leaf vein
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.quadraticCurveTo(
+            length * 0.5,
+            -length * 0.5,
+            length,
+            -length * 0.48
+        );
+        c.stroke();
+
+        c.restore();
+    }
+
+    leaf(-1, 355, 105);
+    leaf(1, 330, 110);
+    leaf(-1, 410, 65);
+    leaf(1, 405, 67);
+
+    // Roots
+    c.lineWidth = 8;
+
+    const rootPaths = [
+        [220, 452, 190, 480, 155, 545],
+        [220, 452, 250, 480, 285, 545],
+        [220, 465, 218, 505, 220, 558],
+        [210, 470, 175, 500, 125, 520],
+        [230, 470, 270, 500, 315, 520],
+        [220, 490, 195, 510, 180, 558],
+        [220, 490, 245, 515, 260, 558]
+    ];
+
+    for (const p of rootPaths) {
+
+        c.beginPath();
+        c.moveTo(p[0], p[1]);
+
+        c.quadraticCurveTo(
+            p[2], p[3],
+            p[4], p[5]
+        );
+
+        c.stroke();
     }
 }
 
+buildGreenParts();
+
 // ======================================
-// 5. INNER ROSE SPIRAL
+// FILL MASK WITH NON-OVERLAPPING WORDS
 // ======================================
 
-const spiralPoints = [];
+function fillMaskWithWords(mask, colorType) {
 
-for (let i = 0; i < 180; i++) {
+    const c = mask.ctx;
 
-    const t = i / 180;
-    const angle = t * Math.PI * 5;
+    const image = c.getImageData(
+        0, 0, W, H
+    );
 
-    const radius = 3 + t * 24;
+    const data = image.data;
 
-    spiralPoints.push({
-        x: CX + Math.cos(angle) * radius,
-        y: CY + Math.sin(angle) * radius * 0.85
-    });
+    const stepY = colorType === "red" ? 12 : 13;
+    const fontSize = colorType === "red" ? 8.3 : 8;
+
+    c.font = `${fontSize}px Georgia`;
+
+    // Scan each horizontal row
+    for (
+        let y = 4;
+        y < H - 3;
+        y += stepY
+    ) {
+
+        let segments = [];
+        let start = -1;
+
+        // Detect continuous filled areas
+        for (
+            let x = 0;
+            x <= W;
+            x += 2
+        ) {
+
+            let filled = false;
+
+            if (x < W) {
+                const index =
+                    (Math.floor(y) * W + Math.floor(x)) * 4;
+
+                filled = data[index + 3] > 90;
+            }
+
+            if (filled && start === -1) {
+                start = x;
+            }
+
+            if ((!filled || x === W) && start !== -1) {
+
+                if (x - start > 24) {
+                    segments.push({
+                        left: start + 3,
+                        right: x - 3
+                    });
+                }
+
+                start = -1;
+            }
+        }
+
+        // Place words with measured spacing
+        for (const segment of segments) {
+
+            let x = segment.left;
+
+            while (x < segment.right - 15) {
+
+                const available =
+                    segment.right - x;
+
+                const fitting = phrases.filter(phrase => {
+                    return c.measureText(phrase).width <=
+                        available;
+                });
+
+                if (fitting.length === 0) break;
+
+                const phrase = fitting[
+                    Math.floor(Math.random() * fitting.length)
+                ];
+
+                const width =
+                    c.measureText(phrase).width;
+
+                const centerX = x + width / 2;
+
+                let color;
+
+                if (colorType === "red") {
+
+                    const distance = Math.hypot(
+                        centerX - CX,
+                        y - CY
+                    );
+
+                    const paletteIndex = Math.min(
+                        redColors.length - 1,
+                        Math.floor(distance / 24)
+                    );
+
+                    color = redColors[
+                        paletteIndex
+                    ];
+
+                } else {
+
+                    color = greenColors[
+                        Math.floor(Math.random() *
+                        greenColors.length)
+                    ];
+                }
+
+                items.push({
+                    x: centerX,
+                    y,
+                    phrase,
+                    color,
+                    size: fontSize,
+                    alpha: 0
+                });
+
+                x += width + 5;
+            }
+        }
+    }
 }
 
-addPathWords(
-    spiralPoints,
-    "#ff667c",
-    8
+fillMaskWithWords(
+    greenMask,
+    "green"
+);
+
+fillMaskWithWords(
+    flowerMask,
+    "red"
 );
 
 // ======================================
-// 6. ANIMATION ORDER
-// ======================================
-
-// فصل الكلمات حسب موقعها
-const roots = items.filter(p =>
-    p.color.includes("00")
-    && p.y > 440
-);
-
-const stem = items.filter(p =>
-    p.color.includes("00")
-    && p.y <= 440 &&
-    p.y > 245
-);
-
-const leaves = items.filter(p =>
-    p.color.includes("00")
-    && p.y <= 440 &&
-    p.y <= 245
-);
-
-// الكلمات الحمراء من أسفل الوردة إلى أعلاها
-const flower = items.filter(p =>
-    !p.color.includes("00")
-).sort((a, b) => b.y - a.y);
-
-// ترتيب التكوين
-const animationOrder = [
-    ...roots,
-    ...stem,
-    ...leaves,
-    ...flower
-];
-
-// ======================================
-// 7. DRAW
+// DRAW WORDS
 // ======================================
 
 function draw() {
 
     ctx.clearRect(0, 0, W, H);
 
-    for (const item of animationOrder) {
+    for (const item of items) {
 
         if (item.alpha <= 0) continue;
 
         ctx.save();
 
         ctx.globalAlpha = item.alpha;
+
         ctx.font = `${item.size}px Georgia`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        ctx.shadowBlur = 4;
-        ctx.shadowColor = item.color;
         ctx.fillStyle = item.color;
+
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 3;
 
         ctx.fillText(
             item.phrase,
@@ -564,37 +561,51 @@ function draw() {
 }
 
 // ======================================
-// 8. WORD BY WORD ANIMATION
+// ANIMATE FROM ROOTS TO FLOWER
 // ======================================
 
-function animate() {
+// Strict bottom-to-top order
+items.sort((a, b) => b.y - a.y);
 
-    if (current >= animationOrder.length) {
-        started = false;
-        return;
+function startAnimation() {
+
+    animationIndex = 0;
+
+    if (animationTimer) {
+        clearInterval(animationTimer);
     }
 
-    const item = animationOrder[current];
-
-    item.alpha = 1;
-
-    current++;
+    for (const item of items) {
+        item.alpha = 0;
+    }
 
     draw();
 
-    setTimeout(animate, 45);
+    animationTimer = setInterval(() => {
+
+        if (animationIndex >= items.length) {
+
+            clearInterval(animationTimer);
+            animationTimer = null;
+            return;
+        }
+
+        // Reveal one word at a time
+        items[animationIndex].alpha = 1;
+
+        animationIndex++;
+
+        draw();
+
+    }, 35);
 }
 
-// البداية
-resize();
+// Empty screen initially
+resizeCanvas();
 
-setTimeout(() => {
-    if (!started) {
-        started = true;
-        animate();
-    }
-}, 700);
+setTimeout(startAnimation, 800);
 
 </script>
+
 </body>
 </html>
