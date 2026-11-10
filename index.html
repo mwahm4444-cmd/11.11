@@ -1,303 +1,536 @@
 
-import math as m
-import random as r
-import tkinter as tk
-import tkinter.font as tkf
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>1 Rose, Every Language</title>
 
-W, H = 800, 800
-DURATION = 10
-TICK = 16
-ANIM = 38
-LIFT = 32
-GAP = 3
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-BG = "#000000"
-FONT_FALLBACKS = ("Georgia", "Times New Roman", "Arial")
-SEED = 17
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
 
-random.seed(SEED)
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+</style>
+</head>
 
-PHRASES = [
-    "I LOVE YOU", "I love you", "Te amo", "Ti amo",
-    "AMOUR", "Je t'aime", "Ich liebe dich",
-    "愛してる", "사랑해", "我爱你", "أحبك",
-    "Я тебя люблю", "Seni seviyorum", "Nakupenda",
-    "Mahal kita", "Eu te amo", "Я люблю тебя",
-    "Ik hou van jou", "Kocham cię", "Amo",
-    "Te quiero", "Ljubim te", "Volim te",
-    "Minä rakastan sinua", "Jeg elsker deg",
-    "Jeg elsker dig", "Szeretlek", "Kimi o aishiteru",
-    "Aš tave myliu", "Ti tengu caru", "Aloha wau ia oe",
-    "Wo ai ni", "Ya lyublyu tebya", "Ana uhibbuka",
-    "Main tumse pyar karta hoon", "Miluji tě",
-    "Ik hou van je", "T'estimo", "Ek het jou lief",
-    "Maite zaitut", "Te iubesc", "S'agapo",
-    "Seni seviyorum", "Ljubim te", "Amo-te"
-]
+<body>
+<canvas id="rose"></canvas>
 
-GREEN_WORDS = [
-    "LOVE", "AMOR", "TE AMO", "I LOVE YOU",
-    "FOREVER", "MY LOVE", "ALWAYS", "AMOUR",
-    "TI AMO", "BELOVED"
-]
+<script>
 
-root = tk.Tk()
-root.title("1 Rose, Every Language")
-root.geometry(f"{W}x{H}")
-root.configure(bg=BG)
-root.resizable(False, False)
+const canvas = document.getElementById("rose");
+const ctx = canvas.getContext("2d");
 
-canvas = tk.Canvas(
-    root,
-    width=W,
-    height=H,
-    bg=BG,
-    highlightthickness=0
-)
-canvas.pack()
+const W = 800;
+const H = 800;
 
-items = []
-
-RED = [
-    "#65001A", "#800020", "#99002D",
+const RED = [
+    "#650019", "#800020", "#99002D",
     "#B0003A", "#C40045", "#D51A54",
     "#E52B65", "#F04A7B"
-]
+];
 
-GREEN = [
+const GREEN = [
     "#164B25", "#20632D", "#347D3C",
     "#559B55", "#79B76B"
-]
+];
 
-def add_text(x, y, text, color, size=8):
+const LOVE_WORDS = [
+    "I LOVE YOU",
+    "MY PRINCESS",
+    "MY BABY",
+    "MY DARLING",
+    "MY ANGEL",
+    "MY SWEETHEART",
+    "MY KITTEN",
+    "MY CUTIE",
+    "MY QUEEN",
+    "MY PRECIOUS",
+    "MY BUNNY",
+    "MY SUNSHINE",
+    "MY LITTLE GIRL",
+    "MY PRETTY GIRL",
+    "MY HONEY",
+    "MY HEART",
+    "MY SWEETIE",
+    "MY FLOWER",
+    "MY LOVE",
+    "MY EVERYTHING",
+    "MY WORLD",
+    "MY FAVORITE",
+    "MY DREAM",
+    "MY TREASURE",
+    "MY BEAUTIFUL",
+    "MY DEAREST",
+    "MY SWEET GIRL",
+    "MY STAR",
+    "MY ANGEL BABY",
+    "MY LOVELY GIRL",
+    "MY ONE & ONLY",
+    "MY HAPPINESS",
+    "MY FOREVER",
+    "MY GORGEOUS GIRL",
+    "MY TEDDY",
+    "MY BUTTERFLY",
+    "MY LITTLE STAR",
+    "MY SWEET PRINCESS",
+    "MY HEARTBEAT",
+    "MY ADORABLE GIRL",
+    "MY MOONLIGHT",
+    "MY ROSE",
+    "MY LOVELY ANGEL",
+    "MY BABY GIRL",
+    "MY BELOVED",
+    "MY SPECIAL ONE",
+    "MY SUNSHINE GIRL",
+    "MY SWEET LOVE",
+    "MY CUTIE PIE",
+    "MY LITTLE ANGEL",
+    "MY PRECIOUS GIRL",
+    "MY DARLING BABY",
+    "ONLY YOU",
+    "FOREVER YOURS",
+    "I ADORE YOU",
+    "MY SOULMATE",
+    "MY SWEET WORLD",
+    "MY EVERYTHING",
+    "FOREVER & ALWAYS",
+    "YOU ARE MY WORLD"
+];
 
-    font = ("Georgia", size, "bold")
+const GREEN_WORDS = [
+    "MY LOVE",
+    "FOREVER",
+    "ALWAYS",
+    "MY HEART",
+    "MY WORLD",
+    "ONLY YOU",
+    "TRUE LOVE",
+    "MY EVERYTHING",
+    "MY ANGEL",
+    "MY BABY",
+    "MY PRINCESS",
+    "MY DARLING"
+];
 
-    item = canvas.create_text(
-        x, y,
-        text=text,
-        fill=BG,
-        font=font,
-        anchor="center"
-    )
+let dpr = 1;
+let items = [];
+let stars = [];
 
-    items.append((item, color))
+let startTime = 0;
+let animationFrame = 0;
 
+const TOTAL_DURATION = 8000;
+const HOLD_DURATION = 2500;
 
-def draw_title():
+function resize() {
 
-    title = "1 Rose, Every Language"
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    cx = W / 2
-    cy = 83
-    radius = 300
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
 
-    for i, letter in enumerate(title):
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
 
-        angle = math.pi + (
-            math.pi * i / (len(title) - 1)
-        )
+    const scale = Math.min(
+        window.innerWidth / W,
+        window.innerHeight / H
+    );
 
-        x = cx + math.cos(angle) * radius
-        y = cy + math.sin(angle) * 48
+    const offsetX = (window.innerWidth - W * scale) / 2;
+    const offsetY = (window.innerHeight - H * scale) / 2;
 
-        add_text(
-            x, y,
-            letter,
-            "#D20B38",
-            25
-        )
+    ctx.setTransform(
+        dpr * scale, 0,
+        0, dpr * scale,
+        dpr * offsetX,
+        dpr * offsetY
+    );
+}
 
+function random(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
 
-def rose_width(y):
+// ======================================
+// TEXT ELEMENTS
+// ======================================
 
-    R = 190
+function addText(x, y, text, color, size = 8) {
 
-    if abs(y) > R:
-        return 0
+    items.push({
+        x,
+        y,
+        text,
+        color,
+        size,
+        delay: items.length * 24
+    });
+}
 
-    base = math.sqrt(
-        max(0, 1 - (y / R) ** 2)
-    )
+// ======================================
+// CURVED TITLE
+// ======================================
 
-    wave = (
-        0.88
-        + 0.12 * math.cos(
-            8 * math.acos(
-                max(-1, min(1, y / R))
-            )
-        )
-    )
+function createTitle() {
 
-    taper = 1.0
+    const title = "1 Rose, Every Language";
 
-    if y > 85:
-        taper = max(
-            0.08,
-            1 - (y - 85) / 120
-        )
+    const cx = 400;
+    const cy = 85;
+    const radius = 315;
 
-    return R * base * wave * taper
+    for (let i = 0; i < title.length; i++) {
 
+        const angle =
+            Math.PI +
+            Math.PI * i / (title.length - 1);
 
-def create_rose():
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * 48;
 
-    cx = W / 2
-    cy = 310
-
-    y = -175
-
-    while y <= 175:
-
-        half_width = rose_width(y)
-
-        if half_width > 12:
-
-            x = -half_width + 4
-
-            while x < half_width - 5:
-
-                phrase = random.choice(PHRASES)
-
-                size = random.choice([6, 7, 8, 9])
-
-                spacing = random.randint(34, 52)
-
-                add_text(
-                    cx + x,
-                    cy + y,
-                    phrase,
-                    random.choice(RED),
-                    size
-                )
-
-                x += spacing
-
-        y += 11
-
-
-def create_stem():
-
-    cx = W / 2
-
-    for i in range(24):
-
-        y = 490 + i * 10
-
-        x = cx + m.sin(i * 0.25) * 4
-
-        add_text(
+        addText(
             x,
             y,
-            random.choice(GREEN_WORDS),
-            random.choice(GREEN),
-            7
-        )
+            title[i],
+            "#E50937",
+            24
+        );
+    }
+}
 
+// ======================================
+// HEART-SHAPED ROSE
+// ======================================
 
-def create_leaves():
+function insideHeart(x, y) {
 
-    cx = W / 2
+    const a = x * x + y * y - 1;
 
-    leaves = [
-        (cx - 100, 535, -1),
-        (cx + 100, 550, 1),
-        (cx - 80, 590, -1),
-        (cx + 80, 600, 1)
-    ]
+    return (
+        a * a * a -
+        x * x * y * y * y
+    ) <= 0;
+}
 
-    for lx, ly, side in leaves:
+function createRose() {
 
-        for i in range(9):
+    const cx = 400;
+    const cy = 285;
 
-            t = i / 8
+    const radiusX = 172;
+    const radiusY = 145;
 
-            x = lx + side * t * 65
-            y = ly - t * 35
+    let row = 0;
 
-            add_text(
+    for (let py = -1.12; py <= 1.12; py += 0.095) {
+
+        let column = 0;
+
+        for (let px = -1.2; px <= 1.2; px += 0.22) {
+
+            if (insideHeart(px, py)) {
+
+                const x = cx + px * radiusX;
+                const y = cy - py * radiusY;
+
+                const word = random(LOVE_WORDS);
+                const color = random(RED);
+
+                const size = random([7, 8, 8, 9]);
+
+                addText(
+                    x,
+                    y,
+                    word,
+                    color,
+                    size
+                );
+            }
+
+            column++;
+        }
+
+        row++;
+    }
+}
+
+// ======================================
+// ROSE DETAILS
+// ======================================
+
+function createRoseDetails() {
+
+    const cx = 400;
+    const cy = 285;
+
+    for (let i = 0; i < 28; i++) {
+
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 55;
+
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+
+        addText(
+            x,
+            y,
+            random(LOVE_WORDS),
+            random(RED),
+            8
+        );
+    }
+}
+
+// ======================================
+// LEAVES
+// ======================================
+
+function createLeaves() {
+
+    const leaves = [
+        {x: 290, y: 520, side: -1},
+        {x: 510, y: 540, side: 1},
+        {x: 310, y: 600, side: -1},
+        {x: 490, y: 610, side: 1}
+    ];
+
+    leaves.forEach(leaf => {
+
+        for (let i = 0; i < 11; i++) {
+
+            const t = i / 10;
+
+            const x =
+                leaf.x +
+                leaf.side * t * 68;
+
+            const y =
+                leaf.y -
+                Math.sin(t * Math.PI) * 35;
+
+            addText(
                 x,
                 y,
-                random.choice(GREEN_WORDS),
-                random.choice(GREEN),
-                7
-            )
+                random(GREEN_WORDS),
+                random(GREEN),
+                8
+            );
+        }
+    });
+}
 
+// ======================================
+// STEM
+// ======================================
 
-def create_roots():
+function createStem() {
 
-    cx = W / 2
-    base_y = 730
+    const cx = 400;
 
-    branches = [
-        (-160, 785),
-        (-120, 770),
-        (-75, 790),
-        (-35, 780),
-        (0, 800),
-        (35, 780),
-        (75, 790),
-        (120, 770),
-        (160, 785)
-    ]
+    for (let i = 0; i < 27; i++) {
 
-    for end_x, end_y in branches:
+        const y = 430 + i * 11;
 
-        for i in range(6):
+        const x =
+            cx + Math.sin(i * 0.23) * 5;
 
-            t = i / 6
+        addText(
+            x,
+            y,
+            random(GREEN_WORDS),
+            random(GREEN),
+            8
+        );
+    }
+}
 
-            x = cx + end_x * t
-            y = base_y + (end_y - base_y) * t
+// ======================================
+// ROOTS
+// ======================================
 
-            add_text(
+function createRoots() {
+
+    const cx = 400;
+    const baseY = 720;
+
+    const branches = [
+        [-165, 790],
+        [-130, 775],
+        [-95, 795],
+        [-60, 780],
+        [-25, 795],
+        [0, 800],
+        [25, 795],
+        [60, 780],
+        [95, 795],
+        [130, 775],
+        [165, 790]
+    ];
+
+    branches.forEach(branch => {
+
+        for (let i = 0; i < 6; i++) {
+
+            const t = i / 6;
+
+            const x = cx + branch[0] * t;
+            const y = baseY + (branch[1] - baseY) * t;
+
+            addText(
                 x,
                 y,
-                random.choice(GREEN_WORDS),
-                random.choice(GREEN),
+                random(GREEN_WORDS),
+                random(GREEN),
                 7
-            )
+            );
+        }
+    });
+}
 
+// ======================================
+// BACKGROUND
+// ======================================
 
-def animate():
+function createStars() {
 
-    total = len(items)
+    stars = [];
 
-    for i, (item, color) in enumerate(items):
+    for (let i = 0; i < 45; i++) {
 
-        def reveal(target=item, shade=color):
+        stars.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            size: Math.random() * 1.2 + 0.3,
+            alpha: Math.random() * 0.5 + 0.2
+        });
+    }
+}
 
-            canvas.itemconfigure(
-                target,
-                fill=shade
-            )
+function drawBackground() {
 
-        root.after(i * ANIM, reveal)
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, H);
 
-    root.after(
-        total * ANIM + 2500,
-        restart
-    )
+    stars.forEach(star => {
 
+        ctx.globalAlpha = star.alpha;
+        ctx.fillStyle = "#FFFFFF";
 
-def restart():
+        ctx.beginPath();
 
-    for item, color in items:
+        ctx.arc(
+            star.x,
+            star.y,
+            star.size,
+            0,
+            Math.PI * 2
+        );
 
-        canvas.itemconfigure(
-            item,
-            fill=BG
-        )
+        ctx.fill();
+    });
 
-    root.after(500, animate)
+    ctx.globalAlpha = 1;
+}
 
+// ======================================
+// ANIMATION
+// ======================================
 
-draw_title()
-create_rose()
-create_leaves()
-create_stem()
-create_roots()
+function draw(time) {
 
-root.after(500, animate)
+    ctx.clearRect(0, 0, W, H);
 
-root.mainloop()
+    drawBackground();
+
+    const elapsed = time - startTime;
+
+    const progress = Math.min(
+        1,
+        elapsed / TOTAL_DURATION
+    );
+
+    const visibleCount = Math.floor(
+        progress * items.length
+    );
+
+    for (let i = 0; i < visibleCount; i++) {
+
+        const item = items[i];
+
+        ctx.font = `bold ${item.size}px Georgia`;
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillStyle = item.color;
+
+        ctx.fillText(
+            item.text,
+            item.x,
+            item.y
+        );
+    }
+
+    if (progress >= 1) {
+
+        if (animationFrame === 0) {
+            animationFrame = time;
+        }
+
+        if (time - animationFrame > HOLD_DURATION) {
+
+            startTime = time;
+            animationFrame = 0;
+        }
+    }
+
+    requestAnimationFrame(draw);
+}
+
+// ======================================
+// START
+// ======================================
+
+function start() {
+
+    items = [];
+
+    createTitle();
+    createRose();
+    createRoseDetails();
+    createLeaves();
+    createStem();
+    createRoots();
+
+    resize();
+
+    startTime = performance.now();
+
+    requestAnimationFrame(draw);
+}
+
+window.addEventListener("resize", resize);
+
+start();
+
+</script>
+</body>
+</html>
