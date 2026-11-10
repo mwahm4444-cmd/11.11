@@ -9,7 +9,7 @@
             margin: 0;
             background-color: #000;
             color: #fff;
-            font-family: 'Georgia', 'Times New Roman', serif;
+            font-family: 'Georgia', serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -20,109 +20,86 @@
 
         h1 {
             color: #ff3344;
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
             letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
-            animation: pulse 2s infinite;
             text-align: center;
+            text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
-
-        #canvas-container {
+        #canvas {
             position: relative;
-            width: 500px;
-            height: 550px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 400px;
+            height: 450px;
         }
 
         .word {
             position: absolute;
-            font-size: 11px;
+            font-size: 10px;
             white-space: nowrap;
-            transition: all 0.5s ease-in-out;
             user-select: none;
-            opacity: 0;
-            animation: fadeIn 0.8s forwards;
+            transition: 0.3s;
         }
 
-        @keyframes fadeIn {
-            to { opacity: 0.85; }
-        }
-
-        .red { color: #ff2244; text-shadow: 0 0 5px rgba(255, 34, 68, 0.4); }
-        .green { color: #2ecc71; text-shadow: 0 0 5px rgba(46, 204, 113, 0.4); }
+        .red { color: #ff1744; text-shadow: 0 0 4px rgba(255, 23, 68, 0.6); }
+        .green { color: #00e676; text-shadow: 0 0 4px rgba(0, 230, 118, 0.6); }
     </style>
 </head>
 <body>
 
     <h1>1 Rose, Every Language</h1>
-    <div id="canvas-container"></div>
+    <div id="canvas"></div>
 
     <script>
         const phrases = [
             "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", "Te quiero",
             "أحبك", "Mahal kita", "Nakapenda", "S'agapo", "Milujem ťa",
-            "Kocham Cię", "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你",
-            "Ti amo", "Jeg elsker dig", "Minä rakastan sinua", "Volim te"
+            "Kocham Cię", "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你"
         ];
 
-        const container = document.getElementById('canvas-container');
-        const totalElements = 180;
+        const canvas = document.getElementById('canvas');
+        const total = 160;
 
-        for (let i = 0; i < totalElements; i++) {
+        for (let i = 0; i < total; i++) {
             const el = document.createElement('div');
-            el.classList.add('word');
+            el.className = 'word';
             el.innerText = phrases[Math.floor(Math.random() * phrases.length)];
 
-            let x = 0, y = 0;
-            let isRed = true;
+            let x = 0, y = 0, isRed = true;
 
-            if (i < 140) {
-                // رأس الوردة: 8 بتلات منظمة باستخدام معادلة وردية (Rose Curve)
+            if (i < 120) {
+                // رسم 8 بتلات وردة هندسية
                 isRed = true;
-                const petalCount = 8;
-                // توجيه الزاوية لتوزيع الكلمات على 8 بتلات متساوية
-                const theta = (i / 140) * Math.PI * 2 * 3; 
-                const r = 90 * Math.sin(petalCount * theta / 6); // نصف القطر يعطي شكل 8 بتلات
+                const angle = (i / 120) * Math.PI * 2;
+                // معادلة الـ 8 بتلات (Rose Curve: r = cos(4 * theta))
+                const r = 90 * Math.abs(Math.cos(4 * angle)) + 20;
                 
-                // توزيع عشوائي طفيف داخل مساحة البتلة لتبدو طبيعية
-                const randSpread = 0.7 + Math.random() * 0.5;
-                const angle = (i / 140) * Math.PI * 2;
-                
-                x = Math.cos(angle) * Math.abs(r) * randSpread;
-                y = Math.sin(angle) * Math.abs(r) * randSpread - 50; // رفعها للأعلى قليلاً
+                // توزيع عشوائي خفيف داخل البتلة لتعبئتها بشكل طبيعي
+                const dist = r * (0.3 + Math.random() * 0.7);
+                x = Math.cos(angle) * dist;
+                y = Math.sin(angle) * dist - 40; // رفع الوردة للأعلى قليلاً
             } else {
-                // الجذور والساق الخضراء في الأسفل
+                // الساق والجذور الخضراء في الأسفل
                 isRed = false;
-                const stemIndex = i - 140;
-                y = stemIndex * 3 + 40; // تمتد للأسفل بانتظام
+                const stemStep = i - 120;
+                y = stemStep * 3 + 45; // النزول للأسفل
                 
-                // انحناءة واقعية للساق وتفريعات الجذور في الأسفل
-                if (stemIndex < 30) {
-                    x = Math.sin(stemIndex * 0.2) * 8; // الساق مستقيم ومنحني قليلاً
+                if (stemStep < 30) {
+                    x = Math.sin(stemStep * 0.2) * 6; // الساق بخط مستقيم ومنحني بسيط
                 } else {
-                    // تفريع الجذور يميناً ويساراً في القاعدة
-                    const branchDir = (stemIndex % 2 === 0) ? 1 : -1;
-                    x = branchDir * (stemIndex - 25) * 1.5 + Math.sin(stemIndex) * 5;
+                    // تفرع الجذور يمين ويسار في القاع
+                    const side = (stemStep % 2 === 0) ? 1 : -1;
+                    x = side * (stemStep - 25) * 1.2;
                     y += 10;
                 }
             }
 
             el.classList.add(isRed ? 'red' : 'green');
+            // تمركز العناصر في منتصف الـ canvas تماماً
             el.style.left = `calc(50% + ${x}px)`;
             el.style.top = `calc(50% + ${y}px)`;
-            
-            // تأخير ظهور تدريجي لكل كلمة
-            el.style.animationDelay = `${i * 0.02}s`;
-            container.appendChild(el);
+
+            canvas.appendChild(el);
         }
     </script>
 </body>
