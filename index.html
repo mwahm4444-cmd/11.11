@@ -21,22 +21,23 @@ html, body {
 }
 
 body {
-    display: grid;
-    place-items: center;
-    font-family: Georgia, serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 canvas {
     display: block;
     width: 100vw;
     height: 100vh;
+    background: #000;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="rose" aria-label="A rose gradually formed from words in many languages"></canvas>
+<canvas id="rose"></canvas>
 
 <script>
 (() => {
@@ -45,408 +46,402 @@ canvas {
     const canvas = document.getElementById("rose");
     const ctx = canvas.getContext("2d");
 
-    const words = [
-        "LOVE","AMOUR","AMORE","愛","حب","AMOR",
-        "LIEBE","사랑","愛情","प्यार","LJUBAV",
-        "אהבה","Любовь","SEVGİ","KÄRLEK",
-        "TE AMO","Я ТЕБЯ ЛЮБЛЮ","TI AMO",
-        "JE T'AIME","사랑해","我爱你",
-        "愛してる","أحبك","MAHAL KITA",
-        "EU TE AMO","LOVE","AMOUR","愛","LIEBE"
+    const BASE_W = 720;
+    const BASE_H = 1280;
+
+    const redWords = [
+        "LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑","愛情",
+        "TE AMO","JE T'AIME","TI AMO","EU TE AMO","Я ТЕБЯ ЛЮБЛЮ",
+        "我爱你","愛してる","SENI SEVIYORUM","MAHAL KITA","NAKUPENDA",
+        "ICH LIEBE DICH","أحبك","Я ЛЮБЛЮ ТЕБЯ","사랑해","प्यार",
+        "KÄRLEK","LJUBAV","אהבה","AMOR","LOVE"
     ];
 
-    const rand = (n) => {
-        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-        return x - Math.floor(x);
-    };
+    const greenWords = [
+        "LOVE","AMOR","AMOUR","LIEBE","AMORE","愛","حب","TE AMO",
+        "TI AMO","사랑","EU TE AMO","愛してる","LJUBAV","SEVGİ"
+    ];
 
+    let dpr = 1;
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
     let W = 0;
     let H = 0;
-    let dpr = 1;
-    let items = [];
-    let titlePoints = [];
-    let start = 0;
+    let pieces = [];
+    let title = [];
+    let startTime = 0;
     let raf = 0;
-    let scale = 1;
-    let cx = 0;
-    let cy = 0;
-    let unit = 1;
 
-    function rosePath(x, y, s) {
+    function random(n) {
+        const v = Math.sin(n * 91.731 + 17.17) * 43758.5453123;
+        return v - Math.floor(v);
+    }
+
+    // Main rose shape
+    function makeRosePath() {
         const p = new Path2D();
 
-        p.moveTo(x, y + s * .43);
+        p.moveTo(360, 765);
 
-        p.bezierCurveTo(
-            x-s*.08, y+s*.31,
-            x-s*.43, y+s*.17,
-            x-s*.46, y-s*.10
-        );
+        p.bezierCurveTo(325,735,245,700,205,625);
+        p.bezierCurveTo(160,540,175,420,245,365);
+        p.bezierCurveTo(275,340,310,345,333,375);
 
-        p.bezierCurveTo(
-            x-s*.49, y-s*.36,
-            x-s*.28, y-s*.48,
-            x-s*.10, y-s*.34
-        );
+        p.bezierCurveTo(335,300,405,275,455,325);
+        p.bezierCurveTo(475,345,480,365,478,390);
 
-        p.bezierCurveTo(
-            x-s*.04, y-s*.52,
-            x+s*.17, y-s*.51,
-            x+s*.20, y-s*.31
-        );
+        p.bezierCurveTo(535,345,600,390,605,455);
+        p.bezierCurveTo(630,555,580,665,505,715);
 
-        p.bezierCurveTo(
-            x+s*.40, y-s*.45,
-            x+s*.53, y-s*.24,
-            x+s*.42, y+s*.02
-        );
-
-        p.bezierCurveTo(
-            x+s*.36, y+s*.20,
-            x+s*.12, y+s*.35,
-            x, y+s*.43
-        );
+        p.bezierCurveTo(455,748,400,765,360,765);
 
         p.closePath();
+
         return p;
     }
 
-    function leafPath(x, y, s, side) {
+    // Leaves
+    function makeLeafPath(side) {
         const p = new Path2D();
-        const dir = side;
 
-        p.moveTo(x, y);
+        const x = 360;
+        const y = 925;
 
-        p.quadraticCurveTo(
-            x+dir*s*.18, y-s*.20,
-            x+dir*s*.55, y-s*.22
-        );
+        p.moveTo(x,y);
 
-        p.quadraticCurveTo(
-            x+dir*s*.48, y+s*.02,
-            x, y
-        );
+        if (side < 0) {
+            p.bezierCurveTo(315,875,235,865,165,900);
+            p.bezierCurveTo(220,965,295,972,x,y);
+        } else {
+            p.bezierCurveTo(410,875,490,865,555,900);
+            p.bezierCurveTo(500,965,425,972,x,y);
+        }
 
         p.closePath();
+
         return p;
     }
 
+    // Fill shapes with words
+    function addTextInPath(
+        path,
+        color,
+        seed,
+        delayStart,
+        stepX,
+        stepY,
+        minSize,
+        maxSize
+    ) {
+        const test = document.createElement("canvas");
+
+        test.width = BASE_W;
+        test.height = BASE_H;
+
+        const tctx = test.getContext("2d");
+
+        let row = 0;
+
+        for (let y = 0; y < BASE_H; y += stepY) {
+
+            let col = 0;
+
+            for (let x = 0; x < BASE_W; x += stepX) {
+
+                const n = seed + row * 1009 + col * 37;
+
+                const px = x + (random(n)-.5)*stepX*.38;
+                const py = y + (random(n+11)-.5)*stepY*.30;
+
+                if (tctx.isPointInPath(path,px,py)) {
+
+                    const list = color === "green"
+                        ? greenWords
+                        : redWords;
+
+                    const word = list[
+                        Math.floor(random(n+23)*list.length)
+                    ];
+
+                    const size = minSize +
+                        random(n+41)*(maxSize-minSize);
+
+                    pieces.push({
+                        x:px,
+                        y:py,
+                        word,
+                        size,
+                        color,
+                        delay:
+                            delayStart +
+                            (py/BASE_H)*5.7 +
+                            random(n+61)*.45,
+                        alpha:.88+random(n+71)*.12,
+                        angle:(random(n+81)-.5)*.045
+                    });
+                }
+
+                col++;
+            }
+
+            row++;
+        }
+    }
+
+    function build() {
+
+        pieces = [];
+
+        const rose = makeRosePath();
+
+        // Red rose petals
+        addTextInPath(
+            rose,
+            "red",
+            7,
+            .6,
+            13,
+            13,
+            10,
+            14
+        );
+
+        // Inner petal details
+        const petals = [
+            [315,470,75,100,-1],
+            [405,455,78,105,1],
+            [360,555,85,100,0]
+        ];
+
+        petals.forEach((a,i) => {
+
+            const [x,y,rx,ry] = a;
+
+            const p = new Path2D();
+
+            p.moveTo(x,y+ry);
+
+            p.bezierCurveTo(
+                x-rx*1.1,
+                y+ry*.35,
+                x-rx*.85,
+                y-ry*.65,
+                x,
+                y-ry
+            );
+
+            p.bezierCurveTo(
+                x+rx*.9,
+                y-ry*.7,
+                x+rx*1.1,
+                y+ry*.3,
+                x,
+                y+ry
+            );
+
+            p.closePath();
+
+            addTextInPath(
+                p,
+                "red",
+                100+i*31,
+                1.1,
+                17,
+                18,
+                9,
+                12
+            );
+        });
+
+        // Green stem
+        for (let y=745,i=0; y<=1195; y+=13,i++) {
+
+            pieces.push({
+                x:360+Math.sin(y*.018)*5,
+                y,
+                word:greenWords[
+                    Math.floor(random(i+301)*greenWords.length)
+                ],
+                size:11+random(i+411)*3,
+                color:"green",
+                delay:5.9+(y-745)/450*2.4+random(i+501)*.25,
+                alpha:1,
+                angle:0
+            });
+        }
+
+        // Green leaves
+        addTextInPath(
+            makeLeafPath(-1),
+            "green",
+            811,
+            6.7,
+            13,
+            13,
+            9,
+            12
+        );
+
+        addTextInPath(
+            makeLeafPath(1),
+            "green",
+            912,
+            6.7,
+            13,
+            13,
+            9,
+            12
+        );
+
+        // Curved title
+        const label = "1 Rose, Every Language";
+
+        const cx = 360;
+        const cy = 180;
+        const rx = 250;
+        const ry = 105;
+
+        title = [];
+
+        for (let i=0; i<label.length; i++) {
+
+            const a = Math.PI +
+                (i/(label.length-1))*Math.PI;
+
+            title.push({
+                ch:label[i],
+                x:cx+Math.cos(a)*rx,
+                y:cy+Math.sin(a)*ry,
+                angle:Math.atan2(
+                    Math.cos(a)*ry,
+                    -Math.sin(a)*rx
+                ),
+                delay:i*.055
+            });
+        }
+
+        pieces.sort((a,b)=>a.delay-b.delay);
+    }
+
+    // Responsive screen
     function resize() {
-        dpr = Math.min(devicePixelRatio || 1, 2);
 
         W = innerWidth;
         H = innerHeight;
 
+        dpr = Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
         canvas.width = Math.round(W*dpr);
         canvas.height = Math.round(H*dpr);
 
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        scale = Math.min(
+            W/BASE_W,
+            H/BASE_H
+        );
 
-        scale = Math.min(W/600, H/760)*.94;
+        offsetX = (W-BASE_W*scale)/2;
+        offsetY = (H-BASE_H*scale)/2;
 
-        cx = W/2;
-        cy = H/2 + 8*scale;
-        unit = scale;
+        ctx.setTransform(dpr,0,0,dpr,0,0);
 
         build();
 
-        start = performance.now();
+        startTime = performance.now();
 
         cancelAnimationFrame(raf);
-        draw(start);
+
+        draw(startTime);
     }
 
-    function build() {
-        items = [];
-
-        const s = 255*unit;
-        const x = cx;
-        const y = cy-64*unit;
-
-        const head = rosePath(x, y, s);
-
-        const headBox = {
-            l: x-s*.5,
-            r: x+s*.55,
-            t: y-s*.55,
-            b: y+s*.45
-        };
-
-        let index = 0;
-
-        // Rose petals
-
-        for (
-            let yy = headBox.t;
-            yy < headBox.b;
-            yy += 8.1*unit
-        ) {
-            for (
-                let xx = headBox.l;
-                xx < headBox.r;
-                xx += 8.1*unit
-            ) {
-                const j = index++;
-
-                const px = xx+(rand(j+3)-.5)*2.2*unit;
-                const py = yy+(rand(j+9)-.5)*2.2*unit;
-
-                if (ctx.isPointInPath(head, px, py)) {
-
-                    const word = words[
-                        Math.floor(rand(j+21)*words.length)
-                    ];
-
-                    const size = (5.3+rand(j+31)*2)*unit;
-
-                    items.push({
-                        x: px,
-                        y: py,
-                        word,
-                        size,
-                        delay: rand(j+51)*6.2,
-                        color: rand(j+71)>.28
-                            ? "#ff174d"
-                            : "#c90036",
-                        rot: (rand(j+91)-.5)*.08
-                    });
-                }
-            }
-        }
-
-        // Stem
-
-        const stemX = x;
-        const stemTop = y+s*.36;
-        const stemBottom = cy+292*unit;
-
-        for (
-            let yy = stemTop;
-            yy < stemBottom;
-            yy += 8.2*unit
-        ) {
-            const j = index++;
-
-            items.push({
-                x: stemX+(rand(j)-.5)*5*unit,
-                y: yy,
-                word: words[
-                    Math.floor(rand(j+8)*words.length)
-                ],
-                size: 5.5*unit,
-                delay: 6.2+rand(j+18)*2,
-                color: "#4b9b38",
-                rot: 0
-            });
-        }
-
-        // Leaves
-
-        for (const side of [-1, 1]) {
-
-            const lx = x+side*3*unit;
-            const ly = cy+120*unit;
-
-            const leaf = leafPath(
-                lx,
-                ly,
-                145*unit,
-                side
-            );
-
-            const bounds = {
-                l: lx-150*unit,
-                r: lx+150*unit,
-                t: ly-75*unit,
-                b: ly+20*unit
-            };
-
-            for (
-                let yy = bounds.t;
-                yy < bounds.b;
-                yy += 8.4*unit
-            ) {
-                for (
-                    let xx = bounds.l;
-                    xx < bounds.r;
-                    xx += 8.4*unit
-                ) {
-                    const j = index++;
-
-                    const px = xx+(rand(j+3)-.5)*2*unit;
-                    const py = yy+(rand(j+6)-.5)*2*unit;
-
-                    if (ctx.isPointInPath(leaf, px, py)) {
-
-                        items.push({
-                            x: px,
-                            y: py,
-                            word: words[
-                                Math.floor(rand(j+10)*words.length)
-                            ],
-                            size: 5.2*unit,
-                            delay: 7+rand(j+14)*1.7,
-                            color: "#58a83c",
-                            rot: 0
-                        });
-                    }
-                }
-            }
-        }
-
-        // Curved title
-
-        titlePoints = [];
-
-        const title = "1 Rose, Every Language";
-        const radius = 220*unit;
-        const centerY = cy-330*unit;
-
-        for (let i = 0; i < title.length; i++) {
-
-            const a = -Math.PI*.84 +
-                (i/(title.length-1))*Math.PI*.68;
-
-            titlePoints.push({
-                ch: title[i],
-                x: cx+Math.cos(a)*radius,
-                y: centerY+Math.sin(a)*radius,
-                angle: a+Math.PI/2,
-                delay: i*.11
-            });
-        }
-
-        items.sort((a, b) => a.delay-b.delay);
-    }
-
+    // Animation
     function draw(now) {
 
-        ctx.clearRect(0, 0, W, H);
+        ctx.clearRect(0,0,W,H);
 
         ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, W, H);
-
-        const elapsed = (now-start)/1000;
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        // Title animation
+        ctx.fillRect(0,0,W,H);
 
         ctx.save();
 
-        for (const p of titlePoints) {
+        ctx.translate(offsetX,offsetY);
+        ctx.scale(scale,scale);
+
+        const elapsed = (now-startTime)/1000;
+
+        // Title appears first
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        for (const p of title) {
 
             const k = Math.max(
                 0,
-                Math.min(1, (elapsed-p.delay)/.35)
+                Math.min(1,(elapsed-p.delay)/.35)
             );
 
             if (!k) continue;
 
             ctx.save();
 
-            ctx.translate(p.x, p.y);
+            ctx.translate(p.x,p.y);
             ctx.rotate(p.angle);
 
             ctx.globalAlpha = k;
-            ctx.fillStyle = "#ff174d";
+            ctx.fillStyle = "#f20b45";
 
-            ctx.font = `bold ${Math.max(13,18*unit)}px Arial`;
+            ctx.font = "bold 31px Arial, sans-serif";
 
-            ctx.fillText(p.ch, 0, 0);
+            ctx.fillText(p.ch,0,0);
+
+            ctx.restore();
+        }
+
+        // Words form the rose gradually
+        for (const item of pieces) {
+
+            const k = Math.max(
+                0,
+                Math.min(1,(elapsed-item.delay)/.34)
+            );
+
+            if (!k) continue;
+
+            ctx.save();
+
+            ctx.translate(item.x,item.y);
+            ctx.rotate(item.angle);
+
+            ctx.globalAlpha = k*item.alpha;
+
+            ctx.fillStyle = item.color === "green"
+                ? "#55a83c"
+                : "#d70b3c";
+
+            ctx.font =
+                `${item.size}px Georgia, "Times New Roman", serif`;
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillText(item.word,0,0);
 
             ctx.restore();
         }
 
         ctx.restore();
 
-        // Gradual word formation
-
-        for (const it of items) {
-
-            const k = Math.max(
-                0,
-                Math.min(1, (elapsed-it.delay)/.42)
-            );
-
-            if (k <= 0) continue;
-
-            ctx.save();
-
-            ctx.translate(it.x, it.y);
-            ctx.rotate(it.rot);
-
-            ctx.globalAlpha = k;
-
-            ctx.fillStyle = it.color;
-            ctx.shadowColor = it.color;
-            ctx.shadowBlur = 1.8*unit;
-
-            ctx.font = `${Math.max(4.2,it.size)}px Georgia,serif`;
-
-            ctx.fillText(it.word, 0, 0);
-
-            ctx.restore();
-        }
-
-        // Petal details
-
-        if (elapsed > 3) {
-
-            const alpha = Math.min(
-                .22,
-                (elapsed-3)*.035
-            );
-
-            const x = cx;
-            const y = cy-64*unit;
-            const s = 255*unit;
-
-            ctx.save();
-
-            ctx.globalAlpha = alpha;
-            ctx.strokeStyle = "#ff456b";
-            ctx.lineWidth = .7*unit;
-
-            ctx.beginPath();
-
-            ctx.moveTo(x, y+s*.34);
-
-            ctx.bezierCurveTo(
-                x-s*.17, y+s*.03,
-                x-s*.30, y-s*.20,
-                x-s*.12, y-s*.36
-            );
-
-            ctx.moveTo(x, y+s*.34);
-
-            ctx.bezierCurveTo(
-                x+s*.17, y+s*.03,
-                x+s*.34, y-s*.16,
-                x+s*.24, y-s*.36
-            );
-
-            ctx.moveTo(x-s*.29, y-s*.16);
-
-            ctx.quadraticCurveTo(
-                x, y-s*.02,
-                x+s*.30, y-s*.14
-            );
-
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        // Stop after formation
-
-        if (elapsed < 10.5) {
+        // Keep completed rose visible
+        if (elapsed < 11) {
             raf = requestAnimationFrame(draw);
         }
     }
 
-    addEventListener("resize", resize, {
-        passive: true
+    addEventListener("resize",resize,{
+        passive:true
     });
 
     resize();
