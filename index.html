@@ -46,88 +46,61 @@ canvas {
 const canvas = document.getElementById("rose");
 const ctx = canvas.getContext("2d");
 
-const DESIGN_W = 720;
-const DESIGN_H = 1280;
+const W = 720;
+const H = 1280;
 
 const WORDS = [
-    "LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑",
-    "愛情","TE AMO","JE T'AIME","TI AMO","EU TE AMO",
-    "Я ТЕБЯ ЛЮБЛЮ","我爱你","愛してる","SENI SEVIYORUM",
-    "MAHAL KITA","NAKUPENDA","ICH LIEBE DICH","أحبك",
-    "사랑해","प्यार","KÄRLEK","LJUBAV","אהבה","AMOR"
+"LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑",
+"愛情","TE AMO","JE T'AIME","TI AMO","EU TE AMO",
+"Я ТЕБЯ ЛЮБЛЮ","我爱你","愛してる","SENI SEVIYORUM",
+"MAHAL KITA","NAKUPENDA","ICH LIEBE DICH","أحبك",
+"사랑해","प्यार","KÄRLEK","LJUBAV","אהבה","AMOR"
 ];
 
-let width = 0;
-let height = 0;
-let dpr = 1;
-let scale = 1;
-let ox = 0;
-let oy = 0;
+const REDS = [
+"#ed1748",
+"#d90b3e",
+"#ff315b",
+"#b90035",
+"#e91e50",
+"#c9083c",
+"#f04468",
+"#a90030"
+];
 
+let width, height, dpr, scale, ox, oy;
 let rows = [];
+let petals = [];
 let started = 0;
-let frame = 0;
+let animation = 0;
 
-function seeded(n) {
-    const x = Math.sin(n * 127.1 + 311.7) * 43758.5453123;
+function random(n) {
+    const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
     return x - Math.floor(x);
 }
 
-// Main rose silhouette
-function roseShape() {
-    const p = new Path2D();
-
-    p.moveTo(360, 770);
-
-    p.bezierCurveTo(315,740,235,690,198,615);
-    p.bezierCurveTo(150,520,164,405,230,345);
-    p.bezierCurveTo(267,311,311,316,340,355);
-
-    p.bezierCurveTo(351,292,420,274,463,323);
-    p.bezierCurveTo(480,341,489,362,489,385);
-
-    p.bezierCurveTo(543,331,608,375,615,457);
-    p.bezierCurveTo(629,570,557,684,462,738);
-
-    p.bezierCurveTo(420,761,383,770,360,770);
-
-    p.closePath();
-
-    return p;
+// Transform local petal coordinates into flower coordinates
+function transformPoint(cx, cy, angle, x, y) {
+    return {
+        x: cx + x * Math.cos(angle) + y * Math.sin(angle),
+        y: cy - x * Math.sin(angle) + y * Math.cos(angle)
+    };
 }
 
-// Leaves
-function leafShape(side) {
-    const p = new Path2D();
-
-    p.moveTo(360, 920);
-
-    if (side < 0) {
-        p.bezierCurveTo(319,877,242,850,151,885);
-        p.bezierCurveTo(191,950,274,974,360,920);
-    } else {
-        p.bezierCurveTo(402,877,478,850,569,885);
-        p.bezierCurveTo(529,950,446,974,360,920);
-    }
-
-    p.closePath();
-
-    return p;
-}
-
-// Create one broad petal around the flower center
-function makePetal(angle) {
+// Create a realistic broad petal
+function createPetal(cx, cy, angle, length, width, offset = 0) {
 
     const p = new Path2D();
 
-    const cx = 360;
-    const cy = 550;
+    const center = transformPoint(
+        cx, cy, angle, 0, offset
+    );
+
+    const ox = center.x;
+    const oy = center.y;
 
     function point(x, y) {
-        return {
-            x: cx + x * Math.cos(angle) - y * Math.sin(angle),
-            y: cy + x * Math.sin(angle) + y * Math.cos(angle)
-        };
+        return transformPoint(ox, oy, angle, x, y);
     }
 
     function move(x, y) {
@@ -147,25 +120,34 @@ function makePetal(angle) {
         );
     }
 
-    // Wide rounded petal with a pointed outer tip
-    move(-48, 12);
+    // Rounded tip and broad curved sides
+    move(-width * .24, 25);
 
     curve(
-        -125,-48,
-        -112,-165,
-        0,-218
+        -width * .90,
+        -length * .24,
+        -width * .76,
+        -length * .79,
+        0,
+        -length
     );
 
     curve(
-        112,-165,
-        125,-48,
-        48,12
+        width * .76,
+        -length * .79,
+        width * .90,
+        -length * .24,
+        width * .24,
+        25
     );
 
     curve(
-        20,32,
-        -20,32,
-        -48,12
+        width * .10,
+        48,
+        -width * .10,
+        48,
+        -width * .24,
+        25
     );
 
     p.closePath();
@@ -173,81 +155,151 @@ function makePetal(angle) {
     return p;
 }
 
-// Eight clearly defined rose petals
-function createPetals() {
+// Three layers of eight, seven and five petals
+function createRose() {
 
-    const petals = [];
+    petals = [];
 
+    const cx = 360;
+    const cy = 570;
+
+    // Outer layer: eight large petals
     for (let i = 0; i < 8; i++) {
 
         const angle =
             -Math.PI / 2 +
-            i * (Math.PI * 2 / 8);
+            i * Math.PI / 4;
 
         petals.push({
-            path: makePetal(angle),
+            path: createPetal(
+                cx,
+                cy,
+                angle,
+                215,
+                88,
+                0
+            ),
 
-            color: [
-                "#ff1749",
-                "#c90036",
-                "#ed1644",
-                "#a90032",
-                "#f52952",
-                "#c40b39",
-                "#e51b46",
-                "#b90835"
-            ][i]
+            color: REDS[i],
+            layer: 0,
+            delay: .35 + i * .045
         });
     }
 
-    return petals;
+    // Middle layer: seven overlapping petals
+    for (let i = 0; i < 7; i++) {
+
+        const angle =
+            -Math.PI / 2 +
+            i * (Math.PI * 2 / 7) +
+            .20;
+
+        petals.push({
+            path: createPetal(
+                cx,
+                cy,
+                angle,
+                155,
+                65,
+                4
+            ),
+
+            color: REDS[(i + 2) % REDS.length],
+            layer: 1,
+            delay: 1.55 + i * .065
+        });
+    }
+
+    // Inner layer: five smaller petals
+    for (let i = 0; i < 5; i++) {
+
+        const angle =
+            -Math.PI / 2 +
+            i * (Math.PI * 2 / 5) +
+            .35;
+
+        petals.push({
+            path: createPetal(
+                cx,
+                cy,
+                angle,
+                100,
+                43,
+                8
+            ),
+
+            color: REDS[(i + 4) % REDS.length],
+            layer: 2,
+            delay: 2.6 + i * .08
+        });
+    }
+
+    // Small central petals
+    for (let i = 0; i < 3; i++) {
+
+        const angle =
+            -Math.PI / 2 +
+            i * (Math.PI * 2 / 3);
+
+        petals.push({
+            path: createPetal(
+                cx,
+                cy + 3,
+                angle,
+                58,
+                27,
+                7
+            ),
+
+            color: REDS[(i + 1) % REDS.length],
+            layer: 3,
+            delay: 3.5 + i * .12
+        });
+    }
 }
 
-// Inner curled petals
-function createInnerPetals() {
+// Leaves
+function leafShape(side) {
 
-    const petals = [];
+    const p = new Path2D();
 
-    // Central left curl
-    let p = new Path2D();
+    p.moveTo(360,920);
 
-    p.moveTo(360,590);
-    p.bezierCurveTo(310,555,305,495,345,465);
-    p.bezierCurveTo(380,435,425,465,414,500);
-    p.bezierCurveTo(405,530,370,540,355,515);
-    p.bezierCurveTo(345,500,365,480,380,495);
-    p.bezierCurveTo(390,525,380,560,360,590);
+    if (side < 0) {
 
-    p.closePath();
-    petals.push(p);
+        p.bezierCurveTo(
+            319,877,
+            242,850,
+            151,885
+        );
 
-    // Central right curl
-    p = new Path2D();
+        p.bezierCurveTo(
+            191,950,
+            274,974,
+            360,920
+        );
 
-    p.moveTo(365,595);
-    p.bezierCurveTo(405,555,450,545,465,575);
-    p.bezierCurveTo(478,610,438,640,405,620);
-    p.bezierCurveTo(385,610,395,585,415,585);
-    p.bezierCurveTo(435,590,430,610,415,610);
-    p.closePath();
+    } else {
 
-    petals.push(p);
+        p.bezierCurveTo(
+            402,877,
+            478,850,
+            569,885
+        );
 
-    // Lower central petal
-    p = new Path2D();
-
-    p.moveTo(350,580);
-    p.bezierCurveTo(320,610,330,665,365,685);
-    p.bezierCurveTo(400,665,405,625,375,590);
-    p.bezierCurveTo(370,620,360,640,350,580);
+        p.bezierCurveTo(
+            529,950,
+            446,974,
+            360,920
+        );
+    }
 
     p.closePath();
-    petals.push(p);
 
-    return petals;
+    return p;
 }
 
-// Fill any shape with horizontal word rows
+// Fill each petal with words
 function addWordRows(path, options) {
 
     const {
@@ -258,16 +310,16 @@ function addWordRows(path, options) {
         stepY,
         fontSize,
         color,
-        delayBase,
+        delay,
         seed,
         spacing = 5,
-        rowDelay = .045
+        rowDelay = .04
     } = options;
 
     const scanCanvas = document.createElement("canvas");
 
-    scanCanvas.width = DESIGN_W;
-    scanCanvas.height = DESIGN_H;
+    scanCanvas.width = W;
+    scanCanvas.height = H;
 
     const scan = scanCanvas.getContext("2d");
 
@@ -282,7 +334,7 @@ function addWordRows(path, options) {
 
         for (let x = minX; x <= maxX; x += 2) {
 
-            if (scan.isPointInPath(path, x, y)) {
+            if (scan.isPointInPath(path,x,y)) {
 
                 if (left < 0) left = x;
 
@@ -293,26 +345,26 @@ function addWordRows(path, options) {
         if (left < 0) continue;
 
         let x = left + 2;
-        let wordIndex = 0;
+        let index = 0;
 
         const font =
             fontSize +
-            (seeded(seed + row * 13) - .5) * 1.2;
+            (random(seed + row * 13) - .5) * 1.2;
 
         ctx.font =
             `${font}px Georgia, "Times New Roman", serif`;
 
-        while (x < right - 5) {
+        while (x < right - 4) {
 
             const n =
                 seed +
                 row * 997 +
-                wordIndex * 31;
+                index * 31;
 
             const word =
                 WORDS[
                     Math.floor(
-                        seeded(n) * WORDS.length
+                        random(n) * WORDS.length
                     )
                 ];
 
@@ -324,7 +376,7 @@ function addWordRows(path, options) {
 
                 x: x + wordWidth / 2,
 
-                y: y + (seeded(n + 5) - .5) * 1.4,
+                y: y + (random(n + 5) - .5) * 1.3,
 
                 text: word,
 
@@ -333,51 +385,56 @@ function addWordRows(path, options) {
                 color: color,
 
                 delay:
-                    delayBase +
+                    delay +
                     row * rowDelay +
-                    wordIndex * .012 +
-                    seeded(n + 9) * .09
+                    index * .009 +
+                    random(n + 9) * .06
             });
 
             x += wordWidth + spacing;
 
-            wordIndex++;
+            index++;
         }
     }
 }
 
-// Build the complete rose
+// Build all words
 function buildArtwork() {
 
     rows = [];
 
-    const rose = roseShape();
+    createRose();
 
-    // Red words forming the rose head
-    addWordRows(rose, {
+    // Words inside every individual petal
+    for (let i = 0; i < petals.length; i++) {
 
-        top: 320,
-        bottom: 765,
+        const petal = petals[i];
 
-        minX: 145,
-        maxX: 635,
+        addWordRows(petal.path, {
 
-        stepY: 10.5,
+            top: 330,
+            bottom: 810,
 
-        fontSize: 11.5,
+            minX: 125,
+            maxX: 595,
 
-        color: "#d90b3e",
+            stepY: 10,
 
-        delayBase: .45,
+            fontSize: 11,
 
-        seed: 17,
+            color: REDS[(i + petal.layer) % REDS.length],
 
-        spacing: 5,
+            delay: petal.delay,
 
-        rowDelay: .055
-    });
+            seed: 100 + i * 79,
 
-    // Green left leaf
+            spacing: 4.5,
+
+            rowDelay: .035
+        });
+    }
+
+    // Green leaves
     addWordRows(leafShape(-1), {
 
         top: 865,
@@ -392,7 +449,7 @@ function buildArtwork() {
 
         color: "#579b3c",
 
-        delayBase: 5.8,
+        delay: 5.8,
 
         seed: 311,
 
@@ -401,7 +458,6 @@ function buildArtwork() {
         rowDelay: .035
     });
 
-    // Green right leaf
     addWordRows(leafShape(1), {
 
         top: 865,
@@ -416,7 +472,7 @@ function buildArtwork() {
 
         color: "#579b3c",
 
-        delayBase: 5.8,
+        delay: 5.8,
 
         seed: 419,
 
@@ -435,7 +491,7 @@ function buildArtwork() {
         const word =
             WORDS[
                 Math.floor(
-                    seeded(800 + i) * WORDS.length
+                    random(800 + i) * WORDS.length
                 )
             ];
 
@@ -443,7 +499,7 @@ function buildArtwork() {
 
             x: 360 + Math.sin(y * .014) * 3,
 
-            y: y,
+            y,
 
             text: word,
 
@@ -454,112 +510,124 @@ function buildArtwork() {
             delay:
                 6.3 +
                 (y - 755) * .006 +
-                seeded(900 + i) * .06
+                random(900 + i) * .06
         });
     }
 
     rows.sort((a,b) => a.delay - b.delay);
 }
 
-// Draw the eight broad petals
-function drawOuterPetals(elapsed) {
+// Petal background and natural shading
+function drawPetalBackground(elapsed) {
 
-    const reveal = Math.max(
-        0,
-        Math.min(1, (elapsed - 3.8) / 2.2)
-    );
+    for (const petal of petals) {
 
-    if (reveal <= 0) return;
+        const reveal = Math.max(
+            0,
+            Math.min(1,(elapsed - petal.delay) / .7)
+        );
 
-    const petals = createPetals();
+        if (reveal <= 0) continue;
 
-    ctx.save();
+        ctx.save();
 
-    // Soft rose glow
-    ctx.shadowColor = "#c90036";
-    ctx.shadowBlur = 13;
+        ctx.globalAlpha = reveal * .19;
 
-    for (let i = 0; i < petals.length; i++) {
+        const gradient = ctx.createRadialGradient(
+            360,570,12,
+            360,570,230
+        );
 
-        const petal = petals[i];
+        gradient.addColorStop(0,"#ff4268");
+        gradient.addColorStop(.5,petal.color);
+        gradient.addColorStop(1,"#620019");
 
-        ctx.globalAlpha = reveal * .22;
-
-        ctx.fillStyle = petal.color;
+        ctx.fillStyle = gradient;
 
         ctx.fill(petal.path);
 
-        // Broad, visible petal separation
-        ctx.globalAlpha = reveal * .78;
-
-        ctx.strokeStyle = "#870020";
-        ctx.lineWidth = 7;
-
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
-
-        ctx.stroke(petal.path);
-
-        // Soft highlight on the petal edge
-        ctx.globalAlpha = reveal * .48;
-
-        ctx.strokeStyle = "#ff5276";
-        ctx.lineWidth = 2.5;
-
-        ctx.stroke(petal.path);
+        ctx.restore();
     }
-
-    ctx.restore();
 }
 
-// Draw the central rose spiral
-function drawInnerPetals(elapsed) {
+// Clear separation between overlapping petals
+function drawPetalEdges(elapsed) {
+
+    for (const petal of petals) {
+
+        const reveal = Math.max(
+            0,
+            Math.min(1,(elapsed - petal.delay - .5) / .8)
+        );
+
+        if (reveal <= 0) continue;
+
+        ctx.save();
+
+        ctx.globalAlpha = reveal * .38;
+
+        ctx.strokeStyle = "#71001e";
+        ctx.lineWidth = 2.3;
+
+        ctx.lineJoin = "round";
+
+        ctx.stroke(petal.path);
+
+        ctx.restore();
+    }
+}
+
+// Central rose spiral
+function drawRoseCenter(elapsed) {
 
     const reveal = Math.max(
         0,
-        Math.min(1, (elapsed - 5) / 1.8)
+        Math.min(1,(elapsed - 5) / 2)
     );
 
     if (reveal <= 0) return;
 
-    const petals = createInnerPetals();
-
     ctx.save();
 
-    ctx.shadowColor = "#ff1749";
-    ctx.shadowBlur = 10;
+    ctx.globalAlpha = reveal * .6;
 
-    for (let i = 0; i < petals.length; i++) {
+    ctx.strokeStyle = "#8f002a";
+    ctx.lineWidth = 2.5;
 
-        ctx.globalAlpha = reveal * .34;
+    ctx.beginPath();
 
-        ctx.fillStyle = [
-            "#ff315b",
-            "#bd0635",
-            "#ed1748"
-        ][i];
+    ctx.moveTo(360,570);
 
-        ctx.fill(petals[i]);
+    ctx.bezierCurveTo(
+        320,540,
+        330,485,
+        365,470
+    );
 
-        ctx.globalAlpha = reveal * .9;
+    ctx.bezierCurveTo(
+        405,450,
+        430,490,
+        408,515
+    );
 
-        ctx.strokeStyle = "#79001e";
-        ctx.lineWidth = 6;
+    ctx.bezierCurveTo(
+        390,535,
+        365,520,
+        375,500
+    );
 
-        ctx.stroke(petals[i]);
+    ctx.bezierCurveTo(
+        385,490,
+        395,505,
+        385,512
+    );
 
-        ctx.globalAlpha = reveal * .55;
-
-        ctx.strokeStyle = "#ff5878";
-        ctx.lineWidth = 2;
-
-        ctx.stroke(petals[i]);
-    }
+    ctx.stroke();
 
     ctx.restore();
 }
 
-// Responsive screen
+// Responsive display
 function resize() {
 
     width = window.innerWidth;
@@ -574,12 +642,12 @@ function resize() {
     canvas.height = Math.round(height * dpr);
 
     scale = Math.min(
-        width / DESIGN_W,
-        height / DESIGN_H
+        width / W,
+        height / H
     );
 
-    ox = (width - DESIGN_W * scale) / 2;
-    oy = (height - DESIGN_H * scale) / 2;
+    ox = (width - W * scale) / 2;
+    oy = (height - H * scale) / 2;
 
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
@@ -587,12 +655,12 @@ function resize() {
 
     started = performance.now();
 
-    cancelAnimationFrame(frame);
+    cancelAnimationFrame(animation);
 
     render(started);
 }
 
-// Animation
+// Main animation
 function render(now) {
 
     ctx.clearRect(0,0,width,height);
@@ -606,22 +674,20 @@ function render(now) {
     ctx.save();
 
     ctx.translate(ox,oy);
-
     ctx.scale(scale,scale);
 
     ctx.textAlign = "center";
-
     ctx.textBaseline = "middle";
 
-    // Gradually reveal all words
+    // Background petals appear gradually
+    drawPetalBackground(elapsed);
+
+    // Words form the individual petals
     for (const item of rows) {
 
         const alpha = Math.max(
             0,
-            Math.min(
-                1,
-                (elapsed - item.delay) / .28
-            )
+            Math.min(1,(elapsed - item.delay) / .3)
         );
 
         if (alpha <= 0) continue;
@@ -642,23 +708,23 @@ function render(now) {
 
     ctx.globalAlpha = 1;
 
-    // Eight broad petals
-    drawOuterPetals(elapsed);
+    // Separate petals visually
+    drawPetalEdges(elapsed);
 
-    // Inner curled petals
-    drawInnerPetals(elapsed);
+    // Center of the rose
+    drawRoseCenter(elapsed);
 
     ctx.restore();
 
     // Keep the completed rose visible
-    if (elapsed < 12) {
+    if (elapsed < 14) {
 
-        frame = requestAnimationFrame(render);
+        animation = requestAnimationFrame(render);
     }
 }
 
-window.addEventListener("resize", resize, {
-    passive: true
+window.addEventListener("resize",resize,{
+    passive:true
 });
 
 resize();
