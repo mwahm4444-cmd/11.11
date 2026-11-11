@@ -1,6 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,29 +12,62 @@
 
 body {
     margin: 0;
+    background: #050203;
     min-height: 100vh;
-    background: #020202;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: Georgia, serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 h1 {
-    color: #ff294b;
-    font-size: clamp(18px, 5vw, 25px);
+    color: #ff2a55;
+    font-size: clamp(20px, 5vw, 28px);
     letter-spacing: 2px;
     text-align: center;
-    text-shadow: 0 0 12px #ff1744;
-    margin: 0 0 10px;
+    text-shadow: 0 0 15px rgba(255, 42, 85, 0.6);
+    margin: 0 0 15px;
+    font-weight: 300;
 }
 
-canvas {
-    display: block;
-    width: min(96vw, 440px);
-    height: min(82vh, 570px);
+#canvas {
+    position: relative;
+    width: 400px;
+    height: 580px;
+}
+
+.word {
+    position: absolute;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    line-height: 1;
+    user-select: none;
+}
+
+.red {
+    color: #ff2a5a;
+    text-shadow: 0 0 6px rgba(255, 42, 90, 0.7);
+}
+
+.dark-red {
+    color: #c9183b;
+    text-shadow: 0 0 4px rgba(201, 24, 59, 0.5);
+}
+
+.green {
+    color: #10d876;
+    text-shadow: 0 0 5px rgba(16, 216, 118, 0.6);
+}
+
+.dark-green {
+    color: #0b9651;
+    text-shadow: 0 0 4px rgba(11, 150, 81, 0.4);
 }
 </style>
 </head>
@@ -43,15 +75,9 @@ canvas {
 <body>
 
 <h1>1 Rose, Every Language</h1>
-<canvas id="canvas"></canvas>
+<div id="canvas"></div>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const W = 440;
-const H = 570;
-
 const phrases = [
     "I LOVE YOU",
     "Te amo",
@@ -67,545 +93,124 @@ const phrases = [
     "Seni seviyorum",
     "Я тебя люблю",
     "사랑해요",
-    "我爱你"
+    "我爱你",
+    "Ti amo",
+    "Eu te amo"
 ];
 
-const redColors = [
-    "#a90025",
-    "#c4002e",
-    "#e00035",
-    "#f01642",
-    "#ff294e",
-    "#ff4763",
-    "#d90035"
-];
+const canvas = document.getElementById("canvas");
 
-const greenColors = [
-    "#006b37",
-    "#008b43",
-    "#00a94e",
-    "#00c65c",
-    "#00e676"
-];
+// مركز زهرة الوردة
+const CX = 200;
+const CY = 180;
 
-const items = [];
+const sequence = [];
 
-const CX = 220;
-const CY = 155;
+function addWord(x, y, colorClass, customPhrase = null) {
+    const el = document.createElement("div");
 
-let animationIndex = 0;
-let animationTimer = null;
+    el.className = "word " + colorClass;
+    el.textContent = customPhrase || phrases[Math.floor(Math.random() * phrases.length)];
 
-// ======================================
-// RESPONSIVE CANVAS
-// ======================================
+    el.style.left = x.toFixed(1) + "px";
+    el.style.top = y.toFixed(1) + "px";
 
-function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-
-    ctx.setTransform(
-        canvas.width / W, 0,
-        0, canvas.height / H,
-        0, 0
-    );
-
-    draw();
+    sequence.push(el);
 }
 
-window.addEventListener("resize", resizeCanvas);
-
-// ======================================
-// OFFSCREEN MASKS
-// ======================================
-
-function createMask() {
-    const c = document.createElement("canvas");
-    c.width = W;
-    c.height = H;
-
-    return {
-        canvas: c,
-        ctx: c.getContext("2d")
-    };
+// =====================================
+// 1. STEM - الساق
+// =====================================
+function buildStem() {
+    const points = 55;
+    for (let i = 0; i < points; i++) {
+        const t = i / points;
+        // منحنى ناعم وانسيابي للساق
+        const x = CX + Math.sin(t * Math.PI * 1.5) * 12 - (t * 8);
+        const y = CY + 80 + (t * 260);
+        addWord(x, y, i % 2 === 0 ? "green" : "dark-green");
+    }
 }
 
-const flowerMask = createMask();
-const greenMask = createMask();
+// =====================================
+// 2. LEAVES - الأوراق
+// =====================================
+function buildLeaf(startX, startY, side) {
+    const leafLength = 45;
+    const leafWidth = 22;
+    
+    // رسم شكل ورقة الشجر عبر منحنيين متقابلين
+    for (let i = 0; i <= 25; i++) {
+        const t = i / 25;
+        const width = Math.sin(t * Math.PI) * leafWidth;
+        
+        // الجزء العلوي من الورقة
+        const x1 = startX + side * (t * leafLength);
+        const y1 = startY + (t * 15) - width;
+        
+        // الجزء السفلي من الورقة
+        const x2 = startX + side * (t * leafLength);
+        const y2 = startY + (t * 15) + width;
 
-// ======================================
-// DRAW A NATURAL PETAL
-// ======================================
-
-function drawPetal(context, x, y, angle, length, width) {
-
-    context.save();
-
-    context.translate(x, y);
-    context.rotate(angle);
-
-    const path = new Path2D();
-
-    path.moveTo(0, 15);
-
-    path.bezierCurveTo(
-        -width * 0.75, 0,
-        -width * 1.05, -length * 0.55,
-        0, -length
-    );
-
-    path.bezierCurveTo(
-        width * 1.05, -length * 0.55,
-        width * 0.75, 0,
-        0, 15
-    );
-
-    context.fillStyle = "#fff";
-    context.fill(path);
-
-    context.restore();
+        addWord(x1, y1, "green");
+        if (i % 2 === 0) addWord(x2, y2, "dark-green");
+    }
 }
 
-// ======================================
-// BUILD THE ROSE BLOOM
-// ======================================
-
-function buildFlower() {
-
-    const c = flowerMask.ctx;
-
-    // Outer petals
-    for (let i = 0; i < 10; i++) {
-
-        const angle =
-            i * Math.PI * 2 / 10;
-
-        const px =
-            CX + Math.sin(angle) * 10;
-
-        const py =
-            CY - Math.cos(angle) * 10;
-
-        drawPetal(
-            c, px, py,
-            angle,
-            112,
-            49
-        );
-    }
-
-    // Middle petals
-    for (let i = 0; i < 9; i++) {
-
-        const angle =
-            i * Math.PI * 2 / 9 + 0.22;
-
-        const px =
-            CX + Math.sin(angle) * 5;
-
-        const py =
-            CY - Math.cos(angle) * 5;
-
-        drawPetal(
-            c, px, py,
-            angle,
-            85,
-            40
-        );
-    }
-
-    // Inner petals
-    for (let i = 0; i < 7; i++) {
-
-        const angle =
-            i * Math.PI * 2 / 7 + 0.42;
-
-        const px =
-            CX + Math.sin(angle) * 3;
-
-        const py =
-            CY - Math.cos(angle) * 3;
-
-        drawPetal(
-            c, px, py,
-            angle,
-            60,
-            29
-        );
-    }
-
-    // Small curled petals around the center
-    for (let i = 0; i < 6; i++) {
-
-        const angle =
-            i * Math.PI * 2 / 6;
-
-        drawPetal(
-            c,
-            CX + Math.sin(angle) * 4,
-            CY - Math.cos(angle) * 4,
-            angle,
-            38,
-            19
-        );
-    }
-
-    // Rose center spiral
-    c.save();
-
-    c.strokeStyle = "#fff";
-    c.lineWidth = 12;
-    c.lineCap = "round";
-
-    c.beginPath();
-
-    for (let i = 0; i <= 180; i++) {
-
-        const t = i / 180;
-        const angle = t * Math.PI * 5;
-
-        const radius = 2 + t * 19;
-
+// =====================================
+// 3. ROSE BUD & PETALS - بتلات الوردة
+// =====================================
+function buildRose() {
+    // أ) مركز الوردة الداخلي (الحلزوني)
+    const innerPoints = 40;
+    for (let i = 0; i < innerPoints; i++) {
+        const angle = i * 0.4;
+        const radius = 2 + (i * 0.8);
         const x = CX + Math.cos(angle) * radius;
-        const y = CY + Math.sin(angle) * radius;
-
-        if (i === 0) {
-            c.moveTo(x, y);
-        } else {
-            c.lineTo(x, y);
-        }
+        const y = CY + Math.sin(angle) * (radius * 0.85);
+        addWord(x, y, "red");
     }
 
-    c.stroke();
-    c.restore();
-}
-
-buildFlower();
-
-// ======================================
-// BUILD STEM, LEAVES AND ROOTS
-// ======================================
-
-function buildGreenParts() {
-
-    const c = greenMask.ctx;
-
-    c.fillStyle = "#fff";
-    c.strokeStyle = "#fff";
-
-    // Main curved stem
-    c.lineWidth = 14;
-    c.lineCap = "round";
-
-    c.beginPath();
-    c.moveTo(CX, 240);
-
-    c.bezierCurveTo(
-        211, 310,
-        230, 385,
-        218, 460
-    );
-
-    c.stroke();
-
-    // Leaf shape
-    function leaf(side, y, length) {
-
-        c.save();
-
-        c.translate(CX, y);
-        c.scale(side, 1);
-
-        c.beginPath();
-
-        c.moveTo(0, 0);
-
-        c.bezierCurveTo(
-            18, -length * 0.45,
-            55, -length * 0.85,
-            length, -length * 0.48
-        );
-
-        c.bezierCurveTo(
-            length * 0.8, -length * 0.05,
-            35, length * 0.12,
-            0, 0
-        );
-
-        c.fill();
-
-        // Leaf vein
-        c.lineWidth = 3;
-        c.beginPath();
-        c.moveTo(0, 0);
-        c.quadraticCurveTo(
-            length * 0.5,
-            -length * 0.5,
-            length,
-            -length * 0.48
-        );
-        c.stroke();
-
-        c.restore();
-    }
-
-    leaf(-1, 355, 105);
-    leaf(1, 330, 110);
-    leaf(-1, 410, 65);
-    leaf(1, 405, 67);
-
-    // Roots
-    c.lineWidth = 8;
-
-    const rootPaths = [
-        [220, 452, 190, 480, 155, 545],
-        [220, 452, 250, 480, 285, 545],
-        [220, 465, 218, 505, 220, 558],
-        [210, 470, 175, 500, 125, 520],
-        [230, 470, 270, 500, 315, 520],
-        [220, 490, 195, 510, 180, 558],
-        [220, 490, 245, 515, 260, 558]
+    // ب) الطبقات الوسطى والفيصلية للبتلات
+    const petalLayers = [
+        { count: 5, radiusX: 28, radiusY: 24, rotationOffset: 0 },
+        { count: 6, radiusX: 48, radiusY: 40, rotationOffset: 0.5 },
+        { count: 7, radiusX: 72, radiusY: 60, rotationOffset: 0.2 },
+        { count: 8, radiusX: 95, radiusY: 80, rotationOffset: 0.7 }
     ];
 
-    for (const p of rootPaths) {
+    petalLayers.forEach((layer, layerIndex) => {
+        const numPetals = layer.count;
+        for (let p = 0; p < numPetals; p++) {
+            const petalAngle = (p / numPetals) * Math.PI * 2 + layer.rotationOffset;
+            
+            // رسم قوس كل بتلة
+            const arcSteps = 14;
+            for (let a = 0; a < arcSteps; a++) {
+                const stepAngle = petalAngle + ((a / arcSteps) - 0.5) * 1.1;
+                const rX = layer.radiusX;
+                const rY = layer.radiusY;
 
-        c.beginPath();
-        c.moveTo(p[0], p[1]);
+                const x = CX + Math.cos(stepAngle) * rX;
+                // إمالة خفيفة لجعل شكل زهرة الوردة واقعياً
+                const y = CY + Math.sin(stepAngle) * rY - (Math.cos(stepAngle) * 8);
 
-        c.quadraticCurveTo(
-            p[2], p[3],
-            p[4], p[5]
-        );
-
-        c.stroke();
-    }
-}
-
-buildGreenParts();
-
-// ======================================
-// FILL MASK WITH NON-OVERLAPPING WORDS
-// ======================================
-
-function fillMaskWithWords(mask, colorType) {
-
-    const c = mask.ctx;
-
-    const image = c.getImageData(
-        0, 0, W, H
-    );
-
-    const data = image.data;
-
-    const stepY = colorType === "red" ? 12 : 13;
-    const fontSize = colorType === "red" ? 8.3 : 8;
-
-    c.font = `${fontSize}px Georgia`;
-
-    // Scan each horizontal row
-    for (
-        let y = 4;
-        y < H - 3;
-        y += stepY
-    ) {
-
-        let segments = [];
-        let start = -1;
-
-        // Detect continuous filled areas
-        for (
-            let x = 0;
-            x <= W;
-            x += 2
-        ) {
-
-            let filled = false;
-
-            if (x < W) {
-                const index =
-                    (Math.floor(y) * W + Math.floor(x)) * 4;
-
-                filled = data[index + 3] > 90;
-            }
-
-            if (filled && start === -1) {
-                start = x;
-            }
-
-            if ((!filled || x === W) && start !== -1) {
-
-                if (x - start > 24) {
-                    segments.push({
-                        left: start + 3,
-                        right: x - 3
-                    });
-                }
-
-                start = -1;
+                const color = (layerIndex % 2 === 0) ? "red" : "dark-red";
+                addWord(x, y, color);
             }
         }
+    });
 
-        // Place words with measured spacing
-        for (const segment of segments) {
-
-            let x = segment.left;
-
-            while (x < segment.right - 15) {
-
-                const available =
-                    segment.right - x;
-
-                const fitting = phrases.filter(phrase => {
-                    return c.measureText(phrase).width <=
-                        available;
-                });
-
-                if (fitting.length === 0) break;
-
-                const phrase = fitting[
-                    Math.floor(Math.random() * fitting.length)
-                ];
-
-                const width =
-                    c.measureText(phrase).width;
-
-                const centerX = x + width / 2;
-
-                let color;
-
-                if (colorType === "red") {
-
-                    const distance = Math.hypot(
-                        centerX - CX,
-                        y - CY
-                    );
-
-                    const paletteIndex = Math.min(
-                        redColors.length - 1,
-                        Math.floor(distance / 24)
-                    );
-
-                    color = redColors[
-                        paletteIndex
-                    ];
-
-                } else {
-
-                    color = greenColors[
-                        Math.floor(Math.random() *
-                        greenColors.length)
-                    ];
-                }
-
-                items.push({
-                    x: centerX,
-                    y,
-                    phrase,
-                    color,
-                    size: fontSize,
-                    alpha: 0
-                });
-
-                x += width + 5;
-            }
-        }
+    // ج) قاعدة الوردة الخضراء (الكأس / Sepal)
+    for (let i = -2; i <= 2; i++) {
+        const x = CX + (i * 12);
+        const y = CY + 70 + Math.abs(i) * 4;
+        addWord(x, y, "green");
     }
 }
 
-fillMaskWithWords(
-    greenMask,
-    "green"
-);
-
-fillMaskWithWords(
-    flowerMask,
-    "red"
-);
-
-// ======================================
-// DRAW WORDS
-// ======================================
-
-function draw() {
-
-    ctx.clearRect(0, 0, W, H);
-
-    for (const item of items) {
-
-        if (item.alpha <= 0) continue;
-
-        ctx.save();
-
-        ctx.globalAlpha = item.alpha;
-
-        ctx.font = `${item.size}px Georgia`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        ctx.fillStyle = item.color;
-
-        ctx.shadowColor = item.color;
-        ctx.shadowBlur = 3;
-
-        ctx.fillText(
-            item.phrase,
-            item.x,
-            item.y
-        );
-
-        ctx.restore();
-    }
-}
-
-// ======================================
-// ANIMATE FROM ROOTS TO FLOWER
-// ======================================
-
-// Strict bottom-to-top order
-items.sort((a, b) => b.y - a.y);
-
-function startAnimation() {
-
-    animationIndex = 0;
-
-    if (animationTimer) {
-        clearInterval(animationTimer);
-    }
-
-    for (const item of items) {
-        item.alpha = 0;
-    }
-
-    draw();
-
-    animationTimer = setInterval(() => {
-
-        if (animationIndex >= items.length) {
-
-            clearInterval(animationTimer);
-            animationTimer = null;
-            return;
-        }
-
-        // Reveal one word at a time
-        items[animationIndex].alpha = 1;
-
-        animationIndex++;
-
-        draw();
-
-    }, 35);
-}
-
-// Empty screen initially
-resizeCanvas();
-
-setTimeout(startAnimation, 800);
-
-</script>
-
-</body>
-</html>
+// =====================================
+// بناء المكونات بالترتيب
+// =====================================
+buildStem();                     // 1. الساق
+buildLeaf(CX - 5, CY + 180, -1
