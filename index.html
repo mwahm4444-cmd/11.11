@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>1 Rose, Every Language</title>
+<title>1 Rose, Every Language - Detailed Masterpiece</title>
 
 <style>
 * {
@@ -12,7 +12,7 @@
 
 body {
     margin: 0;
-    background: #050203;
+    background: #020001;
     min-height: 100vh;
     overflow: hidden;
     display: flex;
@@ -23,52 +23,43 @@ body {
 }
 
 h1 {
-    color: #ff2a55;
-    font-size: clamp(20px, 5vw, 28px);
-    letter-spacing: 2px;
+    color: #ff1a40;
+    font-size: clamp(18px, 4vw, 24px);
+    letter-spacing: 3px;
     text-align: center;
-    text-shadow: 0 0 15px rgba(255, 42, 85, 0.6);
-    margin: 0 0 15px;
-    font-weight: 300;
+    text-shadow: 0 0 15px rgba(255, 26, 64, 0.8);
+    margin: 0 0 10px;
+    font-weight: 400;
 }
 
 #canvas {
     position: relative;
-    width: 400px;
-    height: 580px;
+    width: 440px;
+    height: 620px;
 }
 
 .word {
     position: absolute;
     white-space: nowrap;
     transform: translate(-50%, -50%);
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 8px;
+    font-weight: 700;
     opacity: 0;
     pointer-events: none;
     line-height: 1;
     user-select: none;
 }
 
-.red {
-    color: #ff2a5a;
-    text-shadow: 0 0 6px rgba(255, 42, 90, 0.7);
-}
+/* تدرجات ألوان البتلات لزيادة الواقعية والعمق */
+.rose-red-1 { color: #ff0033; text-shadow: 0 0 5px rgba(255, 0, 51, 0.7); }
+.rose-red-2 { color: #ff3366; text-shadow: 0 0 5px rgba(255, 51, 102, 0.7); }
+.rose-red-3 { color: #cc0029; text-shadow: 0 0 4px rgba(204, 0, 41, 0.6); }
+.rose-dark  { color: #8b0000; text-shadow: 0 0 4px rgba(139, 0, 0, 0.5); }
+.rose-pink  { color: #ff6685; text-shadow: 0 0 5px rgba(255, 102, 133, 0.6); }
 
-.dark-red {
-    color: #c9183b;
-    text-shadow: 0 0 4px rgba(201, 24, 59, 0.5);
-}
-
-.green {
-    color: #10d876;
-    text-shadow: 0 0 5px rgba(16, 216, 118, 0.6);
-}
-
-.dark-green {
-    color: #0b9651;
-    text-shadow: 0 0 4px rgba(11, 150, 81, 0.4);
-}
+/* تدرجات ألوان الساق والأوراق */
+.stem-green { color: #00e676; text-shadow: 0 0 5px rgba(0, 230, 118, 0.7); }
+.stem-dark  { color: #008744; text-shadow: 0 0 4px rgba(0, 135, 68, 0.6); }
 </style>
 </head>
 
@@ -78,139 +69,169 @@ h1 {
 <div id="canvas"></div>
 
 <script>
-const phrases = [
-    "I LOVE YOU",
-    "Te amo",
-    "Je t'aime",
-    "Ich liebe dich",
-    "Te quiero",
-    "أحبك",
-    "Mahal kita",
-    "Nakapenda",
-    "S'agapo",
-    "Milujem ťa",
-    "Kocham Cię",
-    "Seni seviyorum",
-    "Я тебя люблю",
-    "사랑해요",
-    "我爱你",
-    "Ti amo",
-    "Eu te amo"
+// قائمة ضخمة تضم عشرات اللغات حول العالم لكلمة "أحبك"
+const globalLovePhrases = [
+    "أحبك", "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", 
+    "Te quiero", "Mahal kita", "S'agapo", "Milujem ťa", "Kocham Cię", 
+    "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你", "Ti amo", 
+    "Eu te amo", "Nakapenda", "Aloha au ia 'oe", "Jeg elsker dig", "Minä rakastan sinua", 
+    "Jag älskar dig", "Te dua", "Volim te", "Seni severim", "Obicham te", 
+    "Ana behibak", "Ani ohev otah", "Saya cinta padamu", "Empatiku", "Tè amu", 
+    "Ik hou van jou", "Szil szeretlek", "Miluji tě", "Bulls-e", "Aloha", 
+    "Ma a o", "Namaste", "Ik hou van je", "Mən səni sevirəm", "Ez tut mahet"
 ];
 
 const canvas = document.getElementById("canvas");
 
 // مركز زهرة الوردة
-const CX = 200;
-const CY = 180;
+const CX = 220;
+const CY = 190;
 
 const sequence = [];
 
-function addWord(x, y, colorClass, customPhrase = null) {
+function addWord(x, y, colorClass) {
     const el = document.createElement("div");
-
     el.className = "word " + colorClass;
-    el.textContent = customPhrase || phrases[Math.floor(Math.random() * phrases.length)];
-
+    // اختيار عشوائي للغات لضمان التنوع الكثيف
+    el.textContent = globalLovePhrases[Math.floor(Math.random() * globalLovePhrases.length)];
     el.style.left = x.toFixed(1) + "px";
     el.style.top = y.toFixed(1) + "px";
-
     sequence.push(el);
 }
 
 // =====================================
-// 1. STEM - الساق
+// 1. الجذور السفلية (Roots)
+// =====================================
+function buildRoots() {
+    for (let side = -1; side <= 1; side += 2) {
+        for (let i = 0; i < 25; i++) {
+            const t = i / 24;
+            const x = CX + side * (10 + t * 70 + Math.sin(t * 4) * 10);
+            const y = CY + 310 + (t * 60);
+            addWord(x, y, "stem-dark");
+        }
+    }
+}
+
+// =====================================
+// 2. الساق المتعرج والانسيابي (Stem)
 // =====================================
 function buildStem() {
-    const points = 55;
-    for (let i = 0; i < points; i++) {
-        const t = i / points;
-        // منحنى ناعم وانسيابي للساق
-        const x = CX + Math.sin(t * Math.PI * 1.5) * 12 - (t * 8);
-        const y = CY + 80 + (t * 260);
-        addWord(x, y, i % 2 === 0 ? "green" : "dark-green");
+    const totalPoints = 75;
+    for (let i = 0; i < totalPoints; i++) {
+        const t = i / totalPoints;
+        const x = CX + Math.sin(t * Math.PI * 2.2) * 8 - (t * 4);
+        const y = CY + 110 + (t * 210);
+        addWord(x, y, i % 2 === 0 ? "stem-green" : "stem-dark");
     }
 }
 
 // =====================================
-// 2. LEAVES - الأوراق
+// 3. الأوراق الجانبية الكثيفة (Detailed Leaves)
 // =====================================
-function buildLeaf(startX, startY, side) {
-    const leafLength = 45;
-    const leafWidth = 22;
-    
-    // رسم شكل ورقة الشجر عبر منحنيين متقابلين
-    for (let i = 0; i <= 25; i++) {
-        const t = i / 25;
-        const width = Math.sin(t * Math.PI) * leafWidth;
+function buildDetailedLeaf(startX, startY, side) {
+    const steps = 35;
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const leafW = Math.sin(t * Math.PI) * 28;
         
-        // الجزء العلوي من الورقة
-        const x1 = startX + side * (t * leafLength);
-        const y1 = startY + (t * 15) - width;
+        // إطار ورقة الشجر بتفاصيل مكثفة
+        const x1 = startX + side * (t * 65);
+        const y1 = startY + (t * 20) - leafW;
         
-        // الجزء السفلي من الورقة
-        const x2 = startX + side * (t * leafLength);
-        const y2 = startY + (t * 15) + width;
+        const x2 = startX + side * (t * 65);
+        const y2 = startY + (t * 20) + leafW;
 
-        addWord(x1, y1, "green");
-        if (i % 2 === 0) addWord(x2, y2, "dark-green");
+        addWord(x1, y1, "stem-green");
+        if (i % 3 !== 0) addWord(x2, y2, "stem-dark");
     }
 }
 
 // =====================================
-// 3. ROSE BUD & PETALS - بتلات الوردة
+// 4. بتلات الوردة الحقيقية المعقدة (Realistic Rose Petals)
 // =====================================
-function buildRose() {
-    // أ) مركز الوردة الداخلي (الحلزوني)
-    const innerPoints = 40;
-    for (let i = 0; i < innerPoints; i++) {
-        const angle = i * 0.4;
-        const radius = 2 + (i * 0.8);
+function buildRealisticRose() {
+    // أ) قلب الوردة الداخلي (حلزوني مكثف جداً)
+    const corePoints = 65;
+    for (let i = 0; i < corePoints; i++) {
+        const angle = i * 0.32;
+        const radius = 2 + (i * 0.65);
         const x = CX + Math.cos(angle) * radius;
         const y = CY + Math.sin(angle) * (radius * 0.85);
-        addWord(x, y, "red");
+        addWord(x, y, "rose-dark");
     }
 
-    // ب) الطبقات الوسطى والفيصلية للبتلات
-    const petalLayers = [
-        { count: 5, radiusX: 28, radiusY: 24, rotationOffset: 0 },
-        { count: 6, radiusX: 48, radiusY: 40, rotationOffset: 0.5 },
-        { count: 7, radiusX: 72, radiusY: 60, rotationOffset: 0.2 },
-        { count: 8, radiusX: 95, radiusY: 80, rotationOffset: 0.7 }
+    // ب) طبقات متعددة من البتلات بتصميم هندسي واقعي (Cardioid & Rose Mathematical Patterns)
+    const layers = [
+        { count: 12, rx: 35, ry: 30, cls: "rose-red-3", offset: 0 },
+        { count: 18, rx: 55, ry: 48, cls: "rose-red-2", offset: 0.2 },
+        { count: 24, rx: 78, ry: 68, cls: "rose-red-1", offset: 0.4 },
+        { count: 32, rx: 102, ry: 88, cls: "rose-pink",  offset: 0.6 },
+        { count: 40, rx: 125, ry: 108, cls: "rose-red-3", offset: 0.8 }
     ];
 
-    petalLayers.forEach((layer, layerIndex) => {
-        const numPetals = layer.count;
-        for (let p = 0; p < numPetals; p++) {
-            const petalAngle = (p / numPetals) * Math.PI * 2 + layer.rotationOffset;
+    layers.forEach(layer => {
+        for (let p = 0; p < layer.count; p++) {
+            const baseAngle = (p / layer.count) * Math.PI * 2 + layer.offset;
+            const arcSteps = 8;
             
-            // رسم قوس كل بتلة
-            const arcSteps = 14;
             for (let a = 0; a < arcSteps; a++) {
-                const stepAngle = petalAngle + ((a / arcSteps) - 0.5) * 1.1;
-                const rX = layer.radiusX;
-                const rY = layer.radiusY;
+                // انحناءات مخصصة لتشكيل تقوسات البتلات الحقيقية
+                const angle = baseAngle + ((a / arcSteps) - 0.5) * 0.7;
+                
+                // تعديل نصف القطر بناءً على شكل البتلة الطبيعي (تموجات دقيقة)
+                const wave = Math.sin(angle * 5) * 6;
+                const rX = layer.rx + wave;
+                const rY = layer.ry + wave;
 
-                const x = CX + Math.cos(stepAngle) * rX;
-                // إمالة خفيفة لجعل شكل زهرة الوردة واقعياً
-                const y = CY + Math.sin(stepAngle) * rY - (Math.cos(stepAngle) * 8);
+                const x = CX + Math.cos(angle) * rX;
+                // ميلان وتوزيع عمودي يمنح الوردة مظهراً مجسماً 3D
+                const y = CY + Math.sin(angle) * rY - (Math.cos(angle * 2) * 12);
 
-                const color = (layerIndex % 2 === 0) ? "red" : "dark-red";
-                addWord(x, y, color);
+                addWord(x, y, layer.cls);
             }
         }
     });
 
-    // ج) قاعدة الوردة الخضراء (الكأس / Sepal)
-    for (let i = -2; i <= 2; i++) {
-        const x = CX + (i * 12);
-        const y = CY + 70 + Math.abs(i) * 4;
-        addWord(x, y, "green");
+    // ج) كأس الوردة الأخضر (تحت البتلات مباشرة)
+    for (let i = -5; i <= 5; i++) {
+        const x = CX + (i * 8);
+        const y = CY + 95 + Math.abs(i) * 5;
+        addWord(x, y, "stem-green");
     }
 }
 
+// بناء الهيكل الكامل للوحة بالترتيب الهندسي
+buildRoots();
+buildStem();
+buildDetailedLeaf(CX - 8, CY + 140, -1); // الورقة اليسرى
+buildDetailedLeaf(CX - 5, CY + 180, 1);  // الورقة اليمنى
+buildDetailedLeaf(CX - 6, CY + 220, -1); // ورقة إضافية لزيادة الكثافة
+buildRealisticRose();                    // الوردة الكثيفة بمئات الكلمات
+
 // =====================================
-// بناء المكونات بالترتيب
+// 5. التحريك التدريجي للكلمات (Animation)
 // =====================================
-buildStem();                     // 1. الساق
-buildLeaf(CX - 5, CY + 180, -1
+let current = 0;
+
+function showNextWord() {
+    if (current >= sequence.length) return;
+
+    const word = sequence[current];
+    canvas.appendChild(word);
+
+    word.style.transition = "opacity 0.15s ease-in";
+    word.style.opacity = "1";
+
+    current++;
+    // سرعة فائقة وثابتة لظهور الكلمات تباعاً بسلاسة ساحرة
+    setTimeout(showNextWord, 20); 
+}
+
+// بدء العرض بعد جزء من الثانية
+setTimeout(showNextWord, 300);
+
+</script>
+
+</body>
+</html>
