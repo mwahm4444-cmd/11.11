@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Masterpiece - 1 Rose, Every Language</title>
+<title>The Ultimate Garden of Love - Every Language</title>
 
 <style>
 * {
@@ -13,7 +13,7 @@
 }
 
 body {
-    background: #010001;
+    background: #000000;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -28,55 +28,56 @@ h1 {
     font-size: clamp(18px, 4vw, 26px);
     letter-spacing: 4px;
     text-align: center;
-    text-shadow: 0 0 20px rgba(255, 26, 72, 0.9);
-    margin-bottom: 12px;
+    text-shadow: 0 0 25px rgba(255, 26, 72, 1);
+    margin-bottom: 10px;
     font-weight: 400;
 }
 
 #canvas {
     position: relative;
-    width: 480px;
-    height: 650px;
-    background: radial-gradient(circle at center, #120205 0%, #010001 85%);
-    border-radius: 16px;
-    box-shadow: 0 0 40px rgba(255, 0, 50, 0.2);
+    width: 500px;
+    height: 680px;
+    background: radial-gradient(circle at center, #150206 0%, #000000 85%);
+    border-radius: 20px;
+    box-shadow: 0 0 50px rgba(255, 0, 50, 0.25);
 }
 
 .word {
     position: absolute;
     white-space: nowrap;
     transform: translate(-50%, -50%);
-    font-size: 9.5px;
+    font-size: 8.5px;
     font-weight: 700;
     opacity: 0;
     pointer-events: none;
     line-height: 1;
     user-select: none;
-    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
 }
 
-/* تدرجات ألوان دقيقة تمنح الوردة عمقاً حقيقياً وتفاصيل بارزة */
-.c-heart  { color: #ff0033; text-shadow: 0 0 6px rgba(255, 0, 51, 1); }
-.c-inner  { color: #ff2a5f; text-shadow: 0 0 6px rgba(255, 42, 95, 0.9); }
-.c-mid    { color: #ff4d79; text-shadow: 0 0 6px rgba(255, 77, 121, 0.9); }
-.c-outer  { color: #ff759a; text-shadow: 0 0 6px rgba(255, 117, 154, 0.8); }
-.c-edge   { color: #ff99b5; text-shadow: 0 0 5px rgba(255, 153, 181, 0.7); }
+/* تدرجات لونية عميقة ومذهلة للبتلات لضمان إبراز التفاصيل */
+.rose-c1 { color: #8b0000; text-shadow: 0 0 5px rgba(139, 0, 0, 0.9); }
+.rose-c2 { color: #cc0029; text-shadow: 0 0 5px rgba(204, 0, 41, 0.9); }
+.rose-c3 { color: #ff0033; text-shadow: 0 0 6px rgba(255, 0, 51, 0.9); }
+.rose-c4 { color: #ff3366; text-shadow: 0 0 6px rgba(255, 51, 102, 0.9); }
+.rose-c5 { color: #ff6685; text-shadow: 0 0 6px rgba(255, 102, 133, 0.8); }
+.rose-c6 { color: #ff99b5; text-shadow: 0 0 5px rgba(255, 153, 181, 0.7); }
 
-/* ألوان الساق والأوراق متسقة ومقروءة */
-.c-stem   { color: #00e676; text-shadow: 0 0 6px rgba(0, 230, 118, 0.9); }
-.c-leaf   { color: #00c853; text-shadow: 0 0 6px rgba(0, 200, 83, 0.8); }
-.c-dark-leaf { color: #008744; text-shadow: 0 0 5px rgba(0, 135, 68, 0.7); }
+/* ألوان الساق والأوراق الزمردية الواضحة */
+.stem-1  { color: #00e676; text-shadow: 0 0 6px rgba(0, 230, 118, 0.9); }
+.stem-2  { color: #00c853; text-shadow: 0 0 6px rgba(0, 200, 83, 0.8); }
+.stem-3  { color: #008744; text-shadow: 0 0 5px rgba(0, 135, 68, 0.7); }
 </style>
 </head>
 
 <body>
 
-<h1>1 Rose, Every Language</h1>
+<h1>The Garden of Love, Every Language</h1>
 <div id="canvas"></div>
 
 <script>
-// قائمة شاملة لأكثر من 55 لغة حول العالم لكلمة "أحبك"
-const globalPhrases = [
+// قائمة ضخمة لأكثر من 60 لغة عالمية لكلمة "أحبك"
+const globalLanguages = [
     "أحبك", "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", 
     "Te quiero", "Mahal kita", "S'agapo", "Milujem ťa", "Kocham Cię", 
     "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你", "Ti amo", 
@@ -84,32 +85,152 @@ const globalPhrases = [
     "Jag älskar dig", "Te dua", "Volim te", "Obicham te", "Ani ohev otah",
     "Ana behibak", "Tè amu", "Ik hou van jou", "Miluji tě", "Mən səni sevirəm",
     "Aloha au ia 'oe", "Aloha", "Namaste", "Bulls-e", "Szil szeretlek",
-    "Volim te", "Cinta", "Szeretlek", "Te' amo", "Ljubim te"
+    "Ljubim te", "Szeretlek", "Cinta", "Te' amo", "Sa vim", "Mahal"
 ];
 
 const canvas = document.getElementById("canvas");
-const sequence = [];
+const wordSequence = [];
 
-function addWord(x, y, colorClass) {
+function spawnWord(x, y, colorClass) {
     const el = document.createElement("div");
     el.className = "word " + colorClass;
-    el.textContent = globalPhrases[Math.floor(Math.random() * globalPhrases.length)];
+    el.textContent = globalLanguages[Math.floor(Math.random() * globalLanguages.length)];
     el.style.left = x.toFixed(1) + "px";
     el.style.top = y.toFixed(1) + "px";
-    sequence.push(el);
+    wordSequence.push(el);
 }
 
-// دالة هندسية متطورة لرسم وردة مفصلة وواضحة بدون أي تداخل مزعج
-function buildAdvancedRose(CX, CY, scale) {
+// دالة متطورة هندسياً لرسم وردة مفصلة بدقة مع طبقات متعددة
+function constructDetailedRose(CX, CY, scale) {
     
-    // 1. قلب الوردة الحلزوني (المركز الداكن والعميق)
-    for (let i = 0; i < 35; i++) {
-        let angle = i * 0.4;
-        let r = (2.5 + i * 0.6) * scale;
-        addWord(CX + Math.cos(angle) * r, CY + Math.sin(angle) * r, "c-heart");
+    // 1. قلب الوردة الداخلي (حلزوني مكثف ومعتم)
+    for (let i = 0; i < 40; i++) {
+        let angle = i * 0.38;
+        let r = (2 + i * 0.55) * scale;
+        spawnWord(CX + Math.cos(angle) * r, CY + Math.sin(angle) * r, "rose-c1");
     }
 
-    // 2. البتلات الداخلية (تغلف القلب وتعطي شكل البرعم المغلق)
+    // 2. البتلات الداخلية المغلقة (تعطي تجويف البرعم)
     for (let p = 0; p < 6; p++) {
         let baseAngle = (p / 6) * Math.PI * 2;
-        for (let j = 0; j < 14; j++) {
+        for (let j = 0; j < 15; j++) {
+            let t = j / 14;
+            let angle = baseAngle + (t - 0.5) * 0.7;
+            let dist = 22 * scale;
+            spawnWord(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * dist * 0.88, "rose-c2");
+        }
+    }
+
+    // 3. البتلات الوسطى المتفتحة
+    for (let p = 0; p < 8; p++) {
+        let baseAngle = (p / 8) * Math.PI * 2 + 0.25;
+        for (let j = 0; j < 20; j++) {
+            let t = j / 19;
+            let angle = baseAngle + (t - 0.5) * 0.85;
+            let dist = (42 + Math.sin(t * Math.PI) * 12) * scale;
+            spawnWord(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * dist * 0.85, "rose-c3");
+        }
+    }
+
+    // 4. البتلات الخارجية العريضة (المكون الأساسي لشكل الوردة الجورية)
+    for (let p = 0; p < 10; p++) {
+        let baseAngle = (p / 10) * Math.PI * 2;
+        for (let j = 0; j < 25; j++) {
+            let t = j / 24;
+            let angle = baseAngle + (t - 0.5) * 0.95;
+            let dist = (70 + Math.sin(t * Math.PI) * 22) * scale;
+            spawnWord(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * (dist * 0.8), "rose-c4");
+        }
+    }
+
+    // 5. طبقة البتلات الكبرى المحيطة
+    for (let p = 0; p < 12; p++) {
+        let baseAngle = (p / 12) * Math.PI * 2 + 0.15;
+        for (let j = 0; j < 20; j++) {
+            let t = j / 19;
+            let angle = baseAngle + (t - 0.5) * 0.75;
+            let dist = (98 + Math.sin(t * Math.PI) * 15) * scale;
+            spawnWord(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * (dist * 0.75), "rose-c5");
+        }
+    }
+
+    // 6. حواف البتلات الخارجية النهائية (تمنح الوردة لمعاناً وعمقاً ثلاثي الأبعاد)
+    for (let p = 0; p < 14; p++) {
+        let baseAngle = (p / 14) * Math.PI * 2;
+        for (let j = 0; j < 15; j++) {
+            let t = j / 14;
+            let angle = baseAngle + (t - 0.5) * 0.65;
+            let dist = (122 + Math.sin(t * Math.PI) * 10) * scale;
+            spawnWord(CX + Math.cos(angle) * dist, CY + Math.sin(angle) * (dist * 0.72), "rose-c6");
+        }
+    }
+}
+
+// بناء بستان مذهل من 5 ورود متكاملة ومتناسقة في اللوحة
+constructDetailedRose(110, 140, 0.55); // وردة فرعية أعلى اليسار
+constructDetailedRose(390, 140, 0.55); // وردة فرعية أعلى اليمين
+constructDetailedRose(140, 270, 0.65); // وردة فرعية أسفل اليسار
+constructDetailedRose(360, 270, 0.65); // وردة فرعية أسفل اليمين
+constructDetailedRose(250, 110, 1.05); // الوردة الملكية الكبرى في المنتصف
+
+// رسم شبكة متكاملة ومعقدة من السيقان الملتفة والمنسابة
+for (let i = 0; i < 90; i++) {
+    let t = i / 90;
+    // الساق الرئيسي المركزي
+    spawnWord(250 + Math.sin(t * Math.PI * 2) * 8, 215 + (t * 430), i % 2 === 0 ? "stem-1" : "stem-2");
+    
+    // السيقان الفرعية المتصلة بالورود الجانبية
+    if (i < 60) {
+        let st = i / 60;
+        spawnWord(110 + (st * 140), 220 + (st * 150), "stem-2");
+        spawnWord(390 - (st * 140), 220 + (st * 150), "stem-3");
+        spawnWord(140 + (st * 110), 350 + (st * 100), "stem-1");
+        spawnWord(360 - (st * 110), 350 + (st * 100), "stem-2");
+    }
+}
+
+// رسم أوراق الشجر الكثيفة والمفصلة على امتداد السيقان
+function constructLeafBranch(startX, startY, side) {
+    for (let i = 0; i <= 32; i++) {
+        let t = i / 32;
+        let w = Math.sin(t * Math.PI) * 26;
+        let x = startX + side * (t * 80);
+        let y = startY + (t * 30) - w;
+        spawnWord(x, y, i % 3 === 0 ? "stem-1" : (i % 3 === 1 ? "stem-2" : "stem-3"));
+    }
+}
+
+constructLeafBranch(210, 310, -1);
+constructLeafBranch(290, 360, 1);
+constructLeafBranch(170, 420, -1);
+constructLeafBranch(330, 450, 1);
+constructLeafBranch(120, 230, -1);
+constructLeafBranch(380, 250, 1);
+
+// =====================================
+// نظام التحريك والظهور التدريجي الاحترافي
+// =====================================
+let currentIndex = 0;
+
+function renderNextWord() {
+    if (currentIndex >= wordSequence.length) return;
+
+    let targetWord = wordSequence[currentIndex];
+    canvas.appendChild(targetWord);
+
+    requestAnimationFrame(() => {
+        targetWord.style.opacity = "1";
+    });
+
+    currentIndex++;
+    // سرعة مثالية تتيح لك مشاهدة رسم البستان وتفتح الورود كلمة بكلمة بسلاسة تامة
+    setTimeout(renderNextWord, 12); 
+}
+
+// بدء العرض الفني للوحة بعد التحميل
+setTimeout(renderNextWord, 300);
+
+</script>
+
+</body>
+</html>
