@@ -6,448 +6,301 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#000000">
 <title>1 Rose, Every Language</title>
-
 <style>
-* {
-    box-sizing: border-box;
-}
-
-html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #000;
-}
-
-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-    background: #000;
-}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+body{display:flex;align-items:center;justify-content:center}
+canvas{display:block;width:100vw;height:100vh;background:#000}
 </style>
 </head>
-
 <body>
-
 <canvas id="rose"></canvas>
-
 <script>
 (() => {
-    "use strict";
-
-    const canvas = document.getElementById("rose");
-    const ctx = canvas.getContext("2d");
-
-    const BASE_W = 720;
-    const BASE_H = 1280;
-
-    const redWords = [
-        "LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑","愛情",
-        "TE AMO","JE T'AIME","TI AMO","EU TE AMO","Я ТЕБЯ ЛЮБЛЮ",
-        "我爱你","愛してる","SENI SEVIYORUM","MAHAL KITA","NAKUPENDA",
-        "ICH LIEBE DICH","أحبك","Я ЛЮБЛЮ ТЕБЯ","사랑해","प्यार",
-        "KÄRLEK","LJUBAV","אהבה","AMOR","LOVE"
-    ];
-
-    const greenWords = [
-        "LOVE","AMOR","AMOUR","LIEBE","AMORE","愛","حب","TE AMO",
-        "TI AMO","사랑","EU TE AMO","愛してる","LJUBAV","SEVGİ"
-    ];
-
-    let dpr = 1;
-    let scale = 1;
-    let offsetX = 0;
-    let offsetY = 0;
-    let W = 0;
-    let H = 0;
-    let pieces = [];
-    let title = [];
-    let startTime = 0;
-    let raf = 0;
-
-    function random(n) {
-        const v = Math.sin(n * 91.731 + 17.17) * 43758.5453123;
-        return v - Math.floor(v);
-    }
-
-    // Main rose shape
-    function makeRosePath() {
-        const p = new Path2D();
-
-        p.moveTo(360, 765);
-
-        p.bezierCurveTo(325,735,245,700,205,625);
-        p.bezierCurveTo(160,540,175,420,245,365);
-        p.bezierCurveTo(275,340,310,345,333,375);
-
-        p.bezierCurveTo(335,300,405,275,455,325);
-        p.bezierCurveTo(475,345,480,365,478,390);
-
-        p.bezierCurveTo(535,345,600,390,605,455);
-        p.bezierCurveTo(630,555,580,665,505,715);
-
-        p.bezierCurveTo(455,748,400,765,360,765);
-
-        p.closePath();
-
-        return p;
-    }
-
-    // Leaves
-    function makeLeafPath(side) {
-        const p = new Path2D();
-
-        const x = 360;
-        const y = 925;
-
-        p.moveTo(x,y);
-
-        if (side < 0) {
-            p.bezierCurveTo(315,875,235,865,165,900);
-            p.bezierCurveTo(220,965,295,972,x,y);
-        } else {
-            p.bezierCurveTo(410,875,490,865,555,900);
-            p.bezierCurveTo(500,965,425,972,x,y);
-        }
-
-        p.closePath();
-
-        return p;
-    }
-
-    // Fill shapes with words
-    function addTextInPath(
-        path,
-        color,
-        seed,
-        delayStart,
-        stepX,
-        stepY,
-        minSize,
-        maxSize
-    ) {
-        const test = document.createElement("canvas");
-
-        test.width = BASE_W;
-        test.height = BASE_H;
-
-        const tctx = test.getContext("2d");
-
-        let row = 0;
-
-        for (let y = 0; y < BASE_H; y += stepY) {
-
-            let col = 0;
-
-            for (let x = 0; x < BASE_W; x += stepX) {
-
-                const n = seed + row * 1009 + col * 37;
-
-                const px = x + (random(n)-.5)*stepX*.38;
-                const py = y + (random(n+11)-.5)*stepY*.30;
-
-                if (tctx.isPointInPath(path,px,py)) {
-
-                    const list = color === "green"
-                        ? greenWords
-                        : redWords;
-
-                    const word = list[
-                        Math.floor(random(n+23)*list.length)
-                    ];
-
-                    const size = minSize +
-                        random(n+41)*(maxSize-minSize);
-
-                    pieces.push({
-                        x:px,
-                        y:py,
-                        word,
-                        size,
-                        color,
-                        delay:
-                            delayStart +
-                            (py/BASE_H)*5.7 +
-                            random(n+61)*.45,
-                        alpha:.88+random(n+71)*.12,
-                        angle:(random(n+81)-.5)*.045
-                    });
-                }
-
-                col++;
-            }
-
-            row++;
-        }
-    }
-
-    function build() {
-
-        pieces = [];
-
-        const rose = makeRosePath();
-
-        // Red rose petals
-        addTextInPath(
-            rose,
-            "red",
-            7,
-            .6,
-            13,
-            13,
-            10,
-            14
-        );
-
-        // Inner petal details
-        const petals = [
-            [315,470,75,100,-1],
-            [405,455,78,105,1],
-            [360,555,85,100,0]
-        ];
-
-        petals.forEach((a,i) => {
-
-            const [x,y,rx,ry] = a;
-
-            const p = new Path2D();
-
-            p.moveTo(x,y+ry);
-
-            p.bezierCurveTo(
-                x-rx*1.1,
-                y+ry*.35,
-                x-rx*.85,
-                y-ry*.65,
-                x,
-                y-ry
-            );
-
-            p.bezierCurveTo(
-                x+rx*.9,
-                y-ry*.7,
-                x+rx*1.1,
-                y+ry*.3,
-                x,
-                y+ry
-            );
-
-            p.closePath();
-
-            addTextInPath(
-                p,
-                "red",
-                100+i*31,
-                1.1,
-                17,
-                18,
-                9,
-                12
-            );
-        });
-
-        // Green stem
-        for (let y=745,i=0; y<=1195; y+=13,i++) {
-
-            pieces.push({
-                x:360+Math.sin(y*.018)*5,
-                y,
-                word:greenWords[
-                    Math.floor(random(i+301)*greenWords.length)
-                ],
-                size:11+random(i+411)*3,
-                color:"green",
-                delay:5.9+(y-745)/450*2.4+random(i+501)*.25,
-                alpha:1,
-                angle:0
-            });
-        }
-
-        // Green leaves
-        addTextInPath(
-            makeLeafPath(-1),
-            "green",
-            811,
-            6.7,
-            13,
-            13,
-            9,
-            12
-        );
-
-        addTextInPath(
-            makeLeafPath(1),
-            "green",
-            912,
-            6.7,
-            13,
-            13,
-            9,
-            12
-        );
-
-        // Curved title
-        const label = "1 Rose, Every Language";
-
-        const cx = 360;
-        const cy = 180;
-        const rx = 250;
-        const ry = 105;
-
-        title = [];
-
-        for (let i=0; i<label.length; i++) {
-
-            const a = Math.PI +
-                (i/(label.length-1))*Math.PI;
-
-            title.push({
-                ch:label[i],
-                x:cx+Math.cos(a)*rx,
-                y:cy+Math.sin(a)*ry,
-                angle:Math.atan2(
-                    Math.cos(a)*ry,
-                    -Math.sin(a)*rx
-                ),
-                delay:i*.055
-            });
-        }
-
-        pieces.sort((a,b)=>a.delay-b.delay);
-    }
-
-    // Responsive screen
-    function resize() {
-
-        W = innerWidth;
-        H = innerHeight;
-
-        dpr = Math.min(
-            window.devicePixelRatio || 1,
-            2
-        );
-
-        canvas.width = Math.round(W*dpr);
-        canvas.height = Math.round(H*dpr);
-
-        scale = Math.min(
-            W/BASE_W,
-            H/BASE_H
-        );
-
-        offsetX = (W-BASE_W*scale)/2;
-        offsetY = (H-BASE_H*scale)/2;
-
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-
-        build();
-
-        startTime = performance.now();
-
-        cancelAnimationFrame(raf);
-
-        draw(startTime);
-    }
-
-    // Animation
-    function draw(now) {
-
-        ctx.clearRect(0,0,W,H);
-
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0,0,W,H);
-
-        ctx.save();
-
-        ctx.translate(offsetX,offsetY);
-        ctx.scale(scale,scale);
-
-        const elapsed = (now-startTime)/1000;
-
-        // Title appears first
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        for (const p of title) {
-
-            const k = Math.max(
-                0,
-                Math.min(1,(elapsed-p.delay)/.35)
-            );
-
-            if (!k) continue;
-
-            ctx.save();
-
-            ctx.translate(p.x,p.y);
-            ctx.rotate(p.angle);
-
-            ctx.globalAlpha = k;
-            ctx.fillStyle = "#f20b45";
-
-            ctx.font = "bold 31px Arial, sans-serif";
-
-            ctx.fillText(p.ch,0,0);
-
-            ctx.restore();
-        }
-
-        // Words form the rose gradually
-        for (const item of pieces) {
-
-            const k = Math.max(
-                0,
-                Math.min(1,(elapsed-item.delay)/.34)
-            );
-
-            if (!k) continue;
-
-            ctx.save();
-
-            ctx.translate(item.x,item.y);
-            ctx.rotate(item.angle);
-
-            ctx.globalAlpha = k*item.alpha;
-
-            ctx.fillStyle = item.color === "green"
-                ? "#55a83c"
-                : "#d70b3c";
-
-            ctx.font =
-                `${item.size}px Georgia, "Times New Roman", serif`;
-
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            ctx.fillText(item.word,0,0);
-
-            ctx.restore();
-        }
-
-        ctx.restore();
-
-        // Keep completed rose visible
-        if (elapsed < 11) {
-            raf = requestAnimationFrame(draw);
-        }
-    }
-
-    addEventListener("resize",resize,{
-        passive:true
-    });
-
-    resize();
+"use strict";
+
+const canvas=document.getElementById("rose");
+const ctx=canvas.getContext("2d");
+const DESIGN_W=720, DESIGN_H=1280;
+
+const WORDS=[
+"LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑",
+"愛情","TE AMO","JE T'AIME","TI AMO","EU TE AMO",
+"Я ТЕБЯ ЛЮБЛЮ","我爱你","愛してる","SENI SEVIYORUM",
+"MAHAL KITA","NAKUPENDA","ICH LIEBE DICH","أحبك",
+"사랑해","प्यार","KÄRLEK","LJUBAV","אהבה","AMOR"
+];
+
+let width=0,height=0,dpr=1,scale=1,ox=0,oy=0;
+let rows=[],heading=[],started=0,frame=0;
+
+function seeded(n){
+const x=Math.sin(n*127.1+311.7)*43758.5453123;
+return x-Math.floor(x);
+}
+
+// Rose head
+function roseShape(){
+const p=new Path2D();
+p.moveTo(360,770);
+p.bezierCurveTo(315,740,235,690,198,615);
+p.bezierCurveTo(150,520,164,405,230,345);
+p.bezierCurveTo(267,311,311,316,340,355);
+p.bezierCurveTo(351,292,420,274,463,323);
+p.bezierCurveTo(480,341,489,362,489,385);
+p.bezierCurveTo(543,331,608,375,615,457);
+p.bezierCurveTo(629,570,557,684,462,738);
+p.bezierCurveTo(420,761,383,770,360,770);
+p.closePath();
+return p;
+}
+
+// Leaves
+function leafShape(side){
+const p=new Path2D();
+p.moveTo(360,920);
+if(side<0){
+p.bezierCurveTo(319,877,242,850,151,885);
+p.bezierCurveTo(191,950,274,974,360,920);
+}else{
+p.bezierCurveTo(402,877,478,850,569,885);
+p.bezierCurveTo(529,950,446,974,360,920);
+}
+p.closePath();
+return p;
+}
+
+// Fill the shape with horizontal rows of words
+function addWordRows(path,options){
+const {
+top,bottom,minX,maxX,stepY,fontSize,color,
+delayBase,seed,spacing=5,rowDelay=.045
+}=options;
+
+const scanCanvas=document.createElement("canvas");
+scanCanvas.width=DESIGN_W;
+scanCanvas.height=DESIGN_H;
+const scan=scanCanvas.getContext("2d");
+
+for(let y=top,row=0;y<=bottom;y+=stepY,row++){
+let left=-1,right=-1;
+
+for(let x=minX;x<=maxX;x+=2){
+if(scan.isPointInPath(path,x,y)){
+if(left<0)left=x;
+right=x;
+}
+}
+
+if(left<0)continue;
+
+let x=left+2;
+let wordIndex=0;
+const font=fontSize+(seeded(seed+row*13)-.5)*1.2;
+
+ctx.font=`${font}px Georgia, "Times New Roman", serif`;
+
+while(x<right-5){
+const n=seed+row*997+wordIndex*31;
+const word=WORDS[Math.floor(seeded(n)*WORDS.length)];
+const wordWidth=ctx.measureText(word).width;
+
+if(x+wordWidth>right-2)break;
+
+rows.push({
+x:x+wordWidth/2,
+y:y+(seeded(n+5)-.5)*1.4,
+text:word,
+size:font,
+color,
+delay:delayBase+row*rowDelay+wordIndex*.012+seeded(n+9)*.09
+});
+
+x+=wordWidth+spacing;
+wordIndex++;
+}
+}
+}
+
+function buildArtwork(){
+rows=[];
+
+const rose=roseShape();
+
+// Red rose head
+addWordRows(rose,{
+top:320,
+bottom:765,
+minX:145,
+maxX:635,
+stepY:10.5,
+fontSize:11.5,
+color:"#d90b3e",
+delayBase:.45,
+seed:17,
+spacing:5,
+rowDelay:.055
+});
+
+// Green leaves
+addWordRows(leafShape(-1),{
+top:865,
+bottom:965,
+minX:140,
+maxX:365,
+stepY:10,
+fontSize:10.5,
+color:"#579b3c",
+delayBase:5.8,
+seed:311,
+spacing:4,
+rowDelay:.035
+});
+
+addWordRows(leafShape(1),{
+top:865,
+bottom:965,
+minX:355,
+maxX:580,
+stepY:10,
+fontSize:10.5,
+color:"#579b3c",
+delayBase:5.8,
+seed:419,
+spacing:4,
+rowDelay:.035
+});
+
+// Green stem
+for(let y=755,i=0;y<=1205;y+=11,i++){
+const word=WORDS[Math.floor(seeded(800+i)*WORDS.length)];
+rows.push({
+x:360+Math.sin(y*.014)*3,
+y,
+text:word,
+size:10.5,
+color:"#579b3c",
+delay:6.3+(y-755)*.006+seeded(900+i)*.06
+});
+}
+
+// Curved heading
+heading=[];
+const title="1 Rose, Every Language";
+const centerX=360,centerY=200,radiusX=250,radiusY=100;
+
+for(let i=0;i<title.length;i++){
+const angle=Math.PI+(i/(title.length-1))*Math.PI;
+heading.push({
+char:title[i],
+x:centerX+Math.cos(angle)*radiusX,
+y:centerY+Math.sin(angle)*radiusY,
+rotation:Math.atan2(
+Math.cos(angle)*radiusY,
+-Math.sin(angle)*radiusX
+),
+delay:i*.055
+});
+}
+
+rows.sort((a,b)=>a.delay-b.delay);
+}
+
+// Responsive screen
+function resize(){
+width=window.innerWidth;
+height=window.innerHeight;
+dpr=Math.min(window.devicePixelRatio||1,2);
+
+canvas.width=Math.round(width*dpr);
+canvas.height=Math.round(height*dpr);
+
+scale=Math.min(width/DESIGN_W,height/DESIGN_H);
+ox=(width-DESIGN_W*scale)/2;
+oy=(height-DESIGN_H*scale)/2;
+
+ctx.setTransform(dpr,0,0,dpr,0,0);
+
+buildArtwork();
+started=performance.now();
+
+cancelAnimationFrame(frame);
+render(started);
+}
+
+// Progressive animation
+function render(now){
+ctx.clearRect(0,0,width,height);
+ctx.fillStyle="#000";
+ctx.fillRect(0,0,width,height);
+
+const elapsed=(now-started)/1000;
+
+ctx.save();
+ctx.translate(ox,oy);
+ctx.scale(scale,scale);
+
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+
+// Heading
+for(const item of heading){
+const alpha=Math.max(0,Math.min(1,(elapsed-item.delay)/.3));
+if(alpha<=0)continue;
+
+ctx.save();
+ctx.translate(item.x,item.y);
+ctx.rotate(item.rotation);
+ctx.globalAlpha=alpha;
+ctx.fillStyle="#ed1748";
+ctx.font="bold 29px Arial, sans-serif";
+ctx.fillText(item.char,0,0);
+ctx.restore();
+}
+
+// Words forming the rose
+for(const item of rows){
+const alpha=Math.max(0,Math.min(1,(elapsed-item.delay)/.28));
+if(alpha<=0)continue;
+
+ctx.globalAlpha=alpha;
+ctx.fillStyle=item.color;
+ctx.font=`${item.size}px Georgia, "Times New Roman", serif`;
+ctx.fillText(item.text,item.x,item.y);
+}
+
+ctx.globalAlpha=1;
+
+// Subtle petal contours
+if(elapsed>4){
+ctx.globalAlpha=Math.min(.13,(elapsed-4)*.025);
+ctx.strokeStyle="#f04468";
+ctx.lineWidth=1;
+
+ctx.beginPath();
+ctx.moveTo(360,735);
+ctx.bezierCurveTo(295,620,260,485,340,365);
+
+ctx.moveTo(360,735);
+ctx.bezierCurveTo(425,620,475,485,463,350);
+
+ctx.moveTo(210,500);
+ctx.quadraticCurveTo(360,570,600,490);
+
+ctx.stroke();
+}
+
+ctx.restore();
+
+if(elapsed<12){
+frame=requestAnimationFrame(render);
+}
+}
+
+window.addEventListener("resize",resize,{passive:true});
+resize();
 
 })();
 </script>
-
 </body>
 </html>
