@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#000000">
-<title> 🥺 نووني, ✨ </title>
+<title>Rose, Every Language</title>
 
 <style>
 * {
@@ -37,7 +37,7 @@ canvas {
 
 <body>
 
-<canvas id="rose" aria-label="A rose formed gradually from words in many languages"></canvas>
+<canvas id="rose"></canvas>
 
 <script>
 (() => {
@@ -73,7 +73,7 @@ function seeded(n) {
     return x - Math.floor(x);
 }
 
-// Main rose shape
+// Main rose silhouette
 function roseShape() {
     const p = new Path2D();
 
@@ -96,7 +96,7 @@ function roseShape() {
     return p;
 }
 
-// Green leaves
+// Leaves
 function leafShape(side) {
     const p = new Path2D();
 
@@ -115,148 +115,131 @@ function leafShape(side) {
     return p;
 }
 
-// Detailed rose petals
-function petalShapes() {
+// Create one broad petal around the flower center
+function makePetal(angle) {
+
+    const p = new Path2D();
+
+    const cx = 360;
+    const cy = 550;
+
+    function point(x, y) {
+        return {
+            x: cx + x * Math.cos(angle) - y * Math.sin(angle),
+            y: cy + x * Math.sin(angle) + y * Math.cos(angle)
+        };
+    }
+
+    function move(x, y) {
+        const a = point(x, y);
+        p.moveTo(a.x, a.y);
+    }
+
+    function curve(x1,y1,x2,y2,x3,y3) {
+        const a = point(x1,y1);
+        const b = point(x2,y2);
+        const c = point(x3,y3);
+
+        p.bezierCurveTo(
+            a.x,a.y,
+            b.x,b.y,
+            c.x,c.y
+        );
+    }
+
+    // Wide rounded petal with a pointed outer tip
+    move(-48, 12);
+
+    curve(
+        -125,-48,
+        -112,-165,
+        0,-218
+    );
+
+    curve(
+        112,-165,
+        125,-48,
+        48,12
+    );
+
+    curve(
+        20,32,
+        -20,32,
+        -48,12
+    );
+
+    p.closePath();
+
+    return p;
+}
+
+// Eight clearly defined rose petals
+function createPetals() {
+
     const petals = [];
 
-    // Upper-left outer petal
+    for (let i = 0; i < 8; i++) {
+
+        const angle =
+            -Math.PI / 2 +
+            i * (Math.PI * 2 / 8);
+
+        petals.push({
+            path: makePetal(angle),
+
+            color: [
+                "#ff1749",
+                "#c90036",
+                "#ed1644",
+                "#a90032",
+                "#f52952",
+                "#c40b39",
+                "#e51b46",
+                "#b90835"
+            ][i]
+        });
+    }
+
+    return petals;
+}
+
+// Inner curled petals
+function createInnerPetals() {
+
+    const petals = [];
+
+    // Central left curl
     let p = new Path2D();
 
-    p.moveTo(360,565);
-
-    p.bezierCurveTo(
-        300,505,
-        235,450,
-        250,390
-    );
-
-    p.bezierCurveTo(
-        265,335,
-        320,340,
-        350,405
-    );
-
-    p.bezierCurveTo(
-        375,455,
-        370,515,
-        360,565
-    );
+    p.moveTo(360,590);
+    p.bezierCurveTo(310,555,305,495,345,465);
+    p.bezierCurveTo(380,435,425,465,414,500);
+    p.bezierCurveTo(405,530,370,540,355,515);
+    p.bezierCurveTo(345,500,365,480,380,495);
+    p.bezierCurveTo(390,525,380,560,360,590);
 
     p.closePath();
     petals.push(p);
 
-    // Upper-right outer petal
+    // Central right curl
     p = new Path2D();
 
-    p.moveTo(360,565);
-
-    p.bezierCurveTo(
-        395,485,
-        440,375,
-        500,390
-    );
-
-    p.bezierCurveTo(
-        565,405,
-        555,485,
-        500,545
-    );
-
-    p.bezierCurveTo(
-        455,590,
-        405,600,
-        360,565
-    );
-
+    p.moveTo(365,595);
+    p.bezierCurveTo(405,555,450,545,465,575);
+    p.bezierCurveTo(478,610,438,640,405,620);
+    p.bezierCurveTo(385,610,395,585,415,585);
+    p.bezierCurveTo(435,590,430,610,415,610);
     p.closePath();
+
     petals.push(p);
 
-    // Left middle petal
+    // Lower central petal
     p = new Path2D();
 
-    p.moveTo(360,665);
-
-    p.bezierCurveTo(
-        295,630,
-        220,590,
-        215,520
-    );
-
-    p.bezierCurveTo(
-        210,475,
-        245,445,
-        285,475
-    );
-
-    p.bezierCurveTo(
-        330,510,
-        345,585,
-        360,665
-    );
-
-    p.closePath();
-    petals.push(p);
-
-    // Right middle petal
-    p = new Path2D();
-
-    p.moveTo(360,665);
-
-    p.bezierCurveTo(
-        405,590,
-        465,485,
-        525,505
-    );
-
-    p.bezierCurveTo(
-        575,525,
-        550,600,
-        490,640
-    );
-
-    p.bezierCurveTo(
-        445,670,
-        400,680,
-        360,665
-    );
-
-    p.closePath();
-    petals.push(p);
-
-    // Central curled petal
-    p = new Path2D();
-
-    p.moveTo(360,675);
-
-    p.bezierCurveTo(
-        315,625,
-        325,560,
-        365,525
-    );
-
-    p.bezierCurveTo(
-        415,480,
-        465,535,
-        435,590
-    );
-
-    p.bezierCurveTo(
-        420,620,
-        390,635,
-        375,615
-    );
-
-    p.bezierCurveTo(
-        365,600,
-        385,580,
-        400,590
-    );
-
-    p.bezierCurveTo(
-        390,640,
-        375,660,
-        360,675
-    );
+    p.moveTo(350,580);
+    p.bezierCurveTo(320,610,330,665,365,685);
+    p.bezierCurveTo(400,665,405,625,375,590);
+    p.bezierCurveTo(370,620,360,640,350,580);
 
     p.closePath();
     petals.push(p);
@@ -264,7 +247,7 @@ function petalShapes() {
     return petals;
 }
 
-// Fill shapes with horizontal rows of words
+// Fill any shape with horizontal word rows
 function addWordRows(path, options) {
 
     const {
@@ -299,11 +282,9 @@ function addWordRows(path, options) {
 
         for (let x = minX; x <= maxX; x += 2) {
 
-            if (scan.isPointInPath(path,x,y)) {
+            if (scan.isPointInPath(path, x, y)) {
 
-                if (left < 0) {
-                    left = x;
-                }
+                if (left < 0) left = x;
 
                 right = x;
             }
@@ -337,11 +318,10 @@ function addWordRows(path, options) {
 
             const wordWidth = ctx.measureText(word).width;
 
-            if (x + wordWidth > right - 2) {
-                break;
-            }
+            if (x + wordWidth > right - 2) break;
 
             rows.push({
+
                 x: x + wordWidth / 2,
 
                 y: y + (seeded(n + 5) - .5) * 1.4,
@@ -366,55 +346,82 @@ function addWordRows(path, options) {
     }
 }
 
-// Build complete artwork
+// Build the complete rose
 function buildArtwork() {
 
     rows = [];
 
     const rose = roseShape();
 
-    // Red rose head
+    // Red words forming the rose head
     addWordRows(rose, {
+
         top: 320,
         bottom: 765,
+
         minX: 145,
         maxX: 635,
+
         stepY: 10.5,
+
         fontSize: 11.5,
+
         color: "#d90b3e",
+
         delayBase: .45,
+
         seed: 17,
+
         spacing: 5,
+
         rowDelay: .055
     });
 
-    // Left green leaf
+    // Green left leaf
     addWordRows(leafShape(-1), {
+
         top: 865,
         bottom: 965,
+
         minX: 140,
         maxX: 365,
+
         stepY: 10,
+
         fontSize: 10.5,
+
         color: "#579b3c",
+
         delayBase: 5.8,
+
         seed: 311,
+
         spacing: 4,
+
         rowDelay: .035
     });
 
-    // Right green leaf
+    // Green right leaf
     addWordRows(leafShape(1), {
+
         top: 865,
         bottom: 965,
+
         minX: 355,
         maxX: 580,
+
         stepY: 10,
+
         fontSize: 10.5,
+
         color: "#579b3c",
+
         delayBase: 5.8,
+
         seed: 419,
+
         spacing: 4,
+
         rowDelay: .035
     });
 
@@ -433,6 +440,7 @@ function buildArtwork() {
             ];
 
         rows.push({
+
             x: 360 + Math.sin(y * .014) * 3,
 
             y: y,
@@ -453,78 +461,100 @@ function buildArtwork() {
     rows.sort((a,b) => a.delay - b.delay);
 }
 
-// Draw additional petal details
-function drawPetalDetails(elapsed) {
+// Draw the eight broad petals
+function drawOuterPetals(elapsed) {
 
     const reveal = Math.max(
         0,
-        Math.min(1, (elapsed - 3.5) / 2)
+        Math.min(1, (elapsed - 3.8) / 2.2)
     );
 
     if (reveal <= 0) return;
 
+    const petals = createPetals();
+
     ctx.save();
 
-    ctx.globalAlpha = reveal * .48;
+    // Soft rose glow
+    ctx.shadowColor = "#c90036";
+    ctx.shadowBlur = 13;
 
-    ctx.strokeStyle = "#ff4168";
-    ctx.lineWidth = 2.1;
+    for (let i = 0; i < petals.length; i++) {
 
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+        const petal = petals[i];
 
-    const petals = petalShapes();
+        ctx.globalAlpha = reveal * .22;
 
-    for (const p of petals) {
-        ctx.stroke(p);
+        ctx.fillStyle = petal.color;
+
+        ctx.fill(petal.path);
+
+        // Broad, visible petal separation
+        ctx.globalAlpha = reveal * .78;
+
+        ctx.strokeStyle = "#870020";
+        ctx.lineWidth = 7;
+
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
+        ctx.stroke(petal.path);
+
+        // Soft highlight on the petal edge
+        ctx.globalAlpha = reveal * .48;
+
+        ctx.strokeStyle = "#ff5276";
+        ctx.lineWidth = 2.5;
+
+        ctx.stroke(petal.path);
     }
 
-    // Curved inner petal folds
-    ctx.globalAlpha = reveal * .38;
+    ctx.restore();
+}
 
-    ctx.lineWidth = 1.5;
+// Draw the central rose spiral
+function drawInnerPetals(elapsed) {
 
-    ctx.beginPath();
-
-    ctx.moveTo(360,690);
-
-    ctx.bezierCurveTo(
-        315,625,
-        310,545,
-        355,475
+    const reveal = Math.max(
+        0,
+        Math.min(1, (elapsed - 5) / 1.8)
     );
 
-    ctx.bezierCurveTo(
-        390,425,
-        455,430,
-        475,475
-    );
+    if (reveal <= 0) return;
 
-    ctx.moveTo(360,690);
+    const petals = createInnerPetals();
 
-    ctx.bezierCurveTo(
-        420,625,
-        470,570,
-        540,560
-    );
+    ctx.save();
 
-    ctx.moveTo(360,690);
+    ctx.shadowColor = "#ff1749";
+    ctx.shadowBlur = 10;
 
-    ctx.bezierCurveTo(
-        300,640,
-        245,585,
-        230,520
-    );
+    for (let i = 0; i < petals.length; i++) {
 
-    ctx.moveTo(360,690);
+        ctx.globalAlpha = reveal * .34;
 
-    ctx.bezierCurveTo(
-        390,650,
-        420,620,
-        445,575
-    );
+        ctx.fillStyle = [
+            "#ff315b",
+            "#bd0635",
+            "#ed1748"
+        ][i];
 
-    ctx.stroke();
+        ctx.fill(petals[i]);
+
+        ctx.globalAlpha = reveal * .9;
+
+        ctx.strokeStyle = "#79001e";
+        ctx.lineWidth = 6;
+
+        ctx.stroke(petals[i]);
+
+        ctx.globalAlpha = reveal * .55;
+
+        ctx.strokeStyle = "#ff5878";
+        ctx.lineWidth = 2;
+
+        ctx.stroke(petals[i]);
+    }
 
     ctx.restore();
 }
@@ -562,12 +592,13 @@ function resize() {
     render(started);
 }
 
-// Progressive animation
+// Animation
 function render(now) {
 
     ctx.clearRect(0,0,width,height);
 
     ctx.fillStyle = "#000";
+
     ctx.fillRect(0,0,width,height);
 
     const elapsed = (now - started) / 1000;
@@ -575,12 +606,14 @@ function render(now) {
     ctx.save();
 
     ctx.translate(ox,oy);
+
     ctx.scale(scale,scale);
 
     ctx.textAlign = "center";
+
     ctx.textBaseline = "middle";
 
-    // Words form the rose gradually
+    // Gradually reveal all words
     for (const item of rows) {
 
         const alpha = Math.max(
@@ -609,19 +642,23 @@ function render(now) {
 
     ctx.globalAlpha = 1;
 
-    // Rose petal details
-    drawPetalDetails(elapsed);
+    // Eight broad petals
+    drawOuterPetals(elapsed);
+
+    // Inner curled petals
+    drawInnerPetals(elapsed);
 
     ctx.restore();
 
     // Keep the completed rose visible
     if (elapsed < 12) {
+
         frame = requestAnimationFrame(render);
     }
 }
 
-window.addEventListener("resize",resize,{
-    passive:true
+window.addEventListener("resize", resize, {
+    passive: true
 });
 
 resize();
