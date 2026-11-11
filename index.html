@@ -5,302 +5,629 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#000000">
-<title>1 Rose, Every Language</title>
+<title>Rose, Every Language</title>
+
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
-body{display:flex;align-items:center;justify-content:center}
-canvas{display:block;width:100vw;height:100vh;background:#000}
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+}
 </style>
 </head>
+
 <body>
-<canvas id="rose"></canvas>
+
+<canvas id="rose" aria-label="A rose formed gradually from words in many languages"></canvas>
+
 <script>
 (() => {
 "use strict";
 
-const canvas=document.getElementById("rose");
-const ctx=canvas.getContext("2d");
-const DESIGN_W=720, DESIGN_H=1280;
+const canvas = document.getElementById("rose");
+const ctx = canvas.getContext("2d");
 
-const WORDS=[
-"LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑",
-"愛情","TE AMO","JE T'AIME","TI AMO","EU TE AMO",
-"Я ТЕБЯ ЛЮБЛЮ","我爱你","愛してる","SENI SEVIYORUM",
-"MAHAL KITA","NAKUPENDA","ICH LIEBE DICH","أحبك",
-"사랑해","प्यार","KÄRLEK","LJUBAV","אהבה","AMOR"
+const DESIGN_W = 720;
+const DESIGN_H = 1280;
+
+const WORDS = [
+    "LOVE","AMOUR","AMORE","AMOR","LIEBE","愛","حب","사랑",
+    "愛情","TE AMO","JE T'AIME","TI AMO","EU TE AMO",
+    "Я ТЕБЯ ЛЮБЛЮ","我爱你","愛してる","SENI SEVIYORUM",
+    "MAHAL KITA","NAKUPENDA","ICH LIEBE DICH","أحبك",
+    "사랑해","प्यार","KÄRLEK","LJUBAV","אהבה","AMOR"
 ];
 
-let width=0,height=0,dpr=1,scale=1,ox=0,oy=0;
-let rows=[],heading=[],started=0,frame=0;
+let width = 0;
+let height = 0;
+let dpr = 1;
+let scale = 1;
+let ox = 0;
+let oy = 0;
 
-function seeded(n){
-const x=Math.sin(n*127.1+311.7)*43758.5453123;
-return x-Math.floor(x);
+let rows = [];
+let started = 0;
+let frame = 0;
+
+function seeded(n) {
+    const x = Math.sin(n * 127.1 + 311.7) * 43758.5453123;
+    return x - Math.floor(x);
 }
 
-// Rose head
-function roseShape(){
-const p=new Path2D();
-p.moveTo(360,770);
-p.bezierCurveTo(315,740,235,690,198,615);
-p.bezierCurveTo(150,520,164,405,230,345);
-p.bezierCurveTo(267,311,311,316,340,355);
-p.bezierCurveTo(351,292,420,274,463,323);
-p.bezierCurveTo(480,341,489,362,489,385);
-p.bezierCurveTo(543,331,608,375,615,457);
-p.bezierCurveTo(629,570,557,684,462,738);
-p.bezierCurveTo(420,761,383,770,360,770);
-p.closePath();
-return p;
+// Main rose shape
+function roseShape() {
+    const p = new Path2D();
+
+    p.moveTo(360, 770);
+
+    p.bezierCurveTo(315,740,235,690,198,615);
+    p.bezierCurveTo(150,520,164,405,230,345);
+    p.bezierCurveTo(267,311,311,316,340,355);
+
+    p.bezierCurveTo(351,292,420,274,463,323);
+    p.bezierCurveTo(480,341,489,362,489,385);
+
+    p.bezierCurveTo(543,331,608,375,615,457);
+    p.bezierCurveTo(629,570,557,684,462,738);
+
+    p.bezierCurveTo(420,761,383,770,360,770);
+
+    p.closePath();
+
+    return p;
 }
-
-// Leaves
-function leafShape(side){
-const p=new Path2D();
-p.moveTo(360,920);
-if(side<0){
-p.bezierCurveTo(319,877,242,850,151,885);
-p.bezierCurveTo(191,950,274,974,360,920);
-}else{
-p.bezierCurveTo(402,877,478,850,569,885);
-p.bezierCurveTo(529,950,446,974,360,920);
-}
-p.closePath();
-return p;
-}
-
-// Fill the shape with horizontal rows of words
-function addWordRows(path,options){
-const {
-top,bottom,minX,maxX,stepY,fontSize,color,
-delayBase,seed,spacing=5,rowDelay=.045
-}=options;
-
-const scanCanvas=document.createElement("canvas");
-scanCanvas.width=DESIGN_W;
-scanCanvas.height=DESIGN_H;
-const scan=scanCanvas.getContext("2d");
-
-for(let y=top,row=0;y<=bottom;y+=stepY,row++){
-let left=-1,right=-1;
-
-for(let x=minX;x<=maxX;x+=2){
-if(scan.isPointInPath(path,x,y)){
-if(left<0)left=x;
-right=x;
-}
-}
-
-if(left<0)continue;
-
-let x=left+2;
-let wordIndex=0;
-const font=fontSize+(seeded(seed+row*13)-.5)*1.2;
-
-ctx.font=`${font}px Georgia, "Times New Roman", serif`;
-
-while(x<right-5){
-const n=seed+row*997+wordIndex*31;
-const word=WORDS[Math.floor(seeded(n)*WORDS.length)];
-const wordWidth=ctx.measureText(word).width;
-
-if(x+wordWidth>right-2)break;
-
-rows.push({
-x:x+wordWidth/2,
-y:y+(seeded(n+5)-.5)*1.4,
-text:word,
-size:font,
-color,
-delay:delayBase+row*rowDelay+wordIndex*.012+seeded(n+9)*.09
-});
-
-x+=wordWidth+spacing;
-wordIndex++;
-}
-}
-}
-
-function buildArtwork(){
-rows=[];
-
-const rose=roseShape();
-
-// Red rose head
-addWordRows(rose,{
-top:320,
-bottom:765,
-minX:145,
-maxX:635,
-stepY:10.5,
-fontSize:11.5,
-color:"#d90b3e",
-delayBase:.45,
-seed:17,
-spacing:5,
-rowDelay:.055
-});
 
 // Green leaves
-addWordRows(leafShape(-1),{
-top:865,
-bottom:965,
-minX:140,
-maxX:365,
-stepY:10,
-fontSize:10.5,
-color:"#579b3c",
-delayBase:5.8,
-seed:311,
-spacing:4,
-rowDelay:.035
-});
+function leafShape(side) {
+    const p = new Path2D();
 
-addWordRows(leafShape(1),{
-top:865,
-bottom:965,
-minX:355,
-maxX:580,
-stepY:10,
-fontSize:10.5,
-color:"#579b3c",
-delayBase:5.8,
-seed:419,
-spacing:4,
-rowDelay:.035
-});
+    p.moveTo(360, 920);
 
-// Green stem
-for(let y=755,i=0;y<=1205;y+=11,i++){
-const word=WORDS[Math.floor(seeded(800+i)*WORDS.length)];
-rows.push({
-x:360+Math.sin(y*.014)*3,
-y,
-text:word,
-size:10.5,
-color:"#579b3c",
-delay:6.3+(y-755)*.006+seeded(900+i)*.06
-});
+    if (side < 0) {
+        p.bezierCurveTo(319,877,242,850,151,885);
+        p.bezierCurveTo(191,950,274,974,360,920);
+    } else {
+        p.bezierCurveTo(402,877,478,850,569,885);
+        p.bezierCurveTo(529,950,446,974,360,920);
+    }
+
+    p.closePath();
+
+    return p;
 }
 
-// Curved heading
-heading=[];
-const title="1 Rose, Every Language";
-const centerX=360,centerY=200,radiusX=250,radiusY=100;
+// Detailed rose petals
+function petalShapes() {
+    const petals = [];
 
-for(let i=0;i<title.length;i++){
-const angle=Math.PI+(i/(title.length-1))*Math.PI;
-heading.push({
-char:title[i],
-x:centerX+Math.cos(angle)*radiusX,
-y:centerY+Math.sin(angle)*radiusY,
-rotation:Math.atan2(
-Math.cos(angle)*radiusY,
--Math.sin(angle)*radiusX
-),
-delay:i*.055
-});
+    // Upper-left outer petal
+    let p = new Path2D();
+
+    p.moveTo(360,565);
+
+    p.bezierCurveTo(
+        300,505,
+        235,450,
+        250,390
+    );
+
+    p.bezierCurveTo(
+        265,335,
+        320,340,
+        350,405
+    );
+
+    p.bezierCurveTo(
+        375,455,
+        370,515,
+        360,565
+    );
+
+    p.closePath();
+    petals.push(p);
+
+    // Upper-right outer petal
+    p = new Path2D();
+
+    p.moveTo(360,565);
+
+    p.bezierCurveTo(
+        395,485,
+        440,375,
+        500,390
+    );
+
+    p.bezierCurveTo(
+        565,405,
+        555,485,
+        500,545
+    );
+
+    p.bezierCurveTo(
+        455,590,
+        405,600,
+        360,565
+    );
+
+    p.closePath();
+    petals.push(p);
+
+    // Left middle petal
+    p = new Path2D();
+
+    p.moveTo(360,665);
+
+    p.bezierCurveTo(
+        295,630,
+        220,590,
+        215,520
+    );
+
+    p.bezierCurveTo(
+        210,475,
+        245,445,
+        285,475
+    );
+
+    p.bezierCurveTo(
+        330,510,
+        345,585,
+        360,665
+    );
+
+    p.closePath();
+    petals.push(p);
+
+    // Right middle petal
+    p = new Path2D();
+
+    p.moveTo(360,665);
+
+    p.bezierCurveTo(
+        405,590,
+        465,485,
+        525,505
+    );
+
+    p.bezierCurveTo(
+        575,525,
+        550,600,
+        490,640
+    );
+
+    p.bezierCurveTo(
+        445,670,
+        400,680,
+        360,665
+    );
+
+    p.closePath();
+    petals.push(p);
+
+    // Central curled petal
+    p = new Path2D();
+
+    p.moveTo(360,675);
+
+    p.bezierCurveTo(
+        315,625,
+        325,560,
+        365,525
+    );
+
+    p.bezierCurveTo(
+        415,480,
+        465,535,
+        435,590
+    );
+
+    p.bezierCurveTo(
+        420,620,
+        390,635,
+        375,615
+    );
+
+    p.bezierCurveTo(
+        365,600,
+        385,580,
+        400,590
+    );
+
+    p.bezierCurveTo(
+        390,640,
+        375,660,
+        360,675
+    );
+
+    p.closePath();
+    petals.push(p);
+
+    return petals;
 }
 
-rows.sort((a,b)=>a.delay-b.delay);
+// Fill shapes with horizontal rows of words
+function addWordRows(path, options) {
+
+    const {
+        top,
+        bottom,
+        minX,
+        maxX,
+        stepY,
+        fontSize,
+        color,
+        delayBase,
+        seed,
+        spacing = 5,
+        rowDelay = .045
+    } = options;
+
+    const scanCanvas = document.createElement("canvas");
+
+    scanCanvas.width = DESIGN_W;
+    scanCanvas.height = DESIGN_H;
+
+    const scan = scanCanvas.getContext("2d");
+
+    for (
+        let y = top, row = 0;
+        y <= bottom;
+        y += stepY, row++
+    ) {
+
+        let left = -1;
+        let right = -1;
+
+        for (let x = minX; x <= maxX; x += 2) {
+
+            if (scan.isPointInPath(path,x,y)) {
+
+                if (left < 0) {
+                    left = x;
+                }
+
+                right = x;
+            }
+        }
+
+        if (left < 0) continue;
+
+        let x = left + 2;
+        let wordIndex = 0;
+
+        const font =
+            fontSize +
+            (seeded(seed + row * 13) - .5) * 1.2;
+
+        ctx.font =
+            `${font}px Georgia, "Times New Roman", serif`;
+
+        while (x < right - 5) {
+
+            const n =
+                seed +
+                row * 997 +
+                wordIndex * 31;
+
+            const word =
+                WORDS[
+                    Math.floor(
+                        seeded(n) * WORDS.length
+                    )
+                ];
+
+            const wordWidth = ctx.measureText(word).width;
+
+            if (x + wordWidth > right - 2) {
+                break;
+            }
+
+            rows.push({
+                x: x + wordWidth / 2,
+
+                y: y + (seeded(n + 5) - .5) * 1.4,
+
+                text: word,
+
+                size: font,
+
+                color: color,
+
+                delay:
+                    delayBase +
+                    row * rowDelay +
+                    wordIndex * .012 +
+                    seeded(n + 9) * .09
+            });
+
+            x += wordWidth + spacing;
+
+            wordIndex++;
+        }
+    }
+}
+
+// Build complete artwork
+function buildArtwork() {
+
+    rows = [];
+
+    const rose = roseShape();
+
+    // Red rose head
+    addWordRows(rose, {
+        top: 320,
+        bottom: 765,
+        minX: 145,
+        maxX: 635,
+        stepY: 10.5,
+        fontSize: 11.5,
+        color: "#d90b3e",
+        delayBase: .45,
+        seed: 17,
+        spacing: 5,
+        rowDelay: .055
+    });
+
+    // Left green leaf
+    addWordRows(leafShape(-1), {
+        top: 865,
+        bottom: 965,
+        minX: 140,
+        maxX: 365,
+        stepY: 10,
+        fontSize: 10.5,
+        color: "#579b3c",
+        delayBase: 5.8,
+        seed: 311,
+        spacing: 4,
+        rowDelay: .035
+    });
+
+    // Right green leaf
+    addWordRows(leafShape(1), {
+        top: 865,
+        bottom: 965,
+        minX: 355,
+        maxX: 580,
+        stepY: 10,
+        fontSize: 10.5,
+        color: "#579b3c",
+        delayBase: 5.8,
+        seed: 419,
+        spacing: 4,
+        rowDelay: .035
+    });
+
+    // Green stem
+    for (
+        let y = 755, i = 0;
+        y <= 1205;
+        y += 11, i++
+    ) {
+
+        const word =
+            WORDS[
+                Math.floor(
+                    seeded(800 + i) * WORDS.length
+                )
+            ];
+
+        rows.push({
+            x: 360 + Math.sin(y * .014) * 3,
+
+            y: y,
+
+            text: word,
+
+            size: 10.5,
+
+            color: "#579b3c",
+
+            delay:
+                6.3 +
+                (y - 755) * .006 +
+                seeded(900 + i) * .06
+        });
+    }
+
+    rows.sort((a,b) => a.delay - b.delay);
+}
+
+// Draw additional petal details
+function drawPetalDetails(elapsed) {
+
+    const reveal = Math.max(
+        0,
+        Math.min(1, (elapsed - 3.5) / 2)
+    );
+
+    if (reveal <= 0) return;
+
+    ctx.save();
+
+    ctx.globalAlpha = reveal * .48;
+
+    ctx.strokeStyle = "#ff4168";
+    ctx.lineWidth = 2.1;
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    const petals = petalShapes();
+
+    for (const p of petals) {
+        ctx.stroke(p);
+    }
+
+    // Curved inner petal folds
+    ctx.globalAlpha = reveal * .38;
+
+    ctx.lineWidth = 1.5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(360,690);
+
+    ctx.bezierCurveTo(
+        315,625,
+        310,545,
+        355,475
+    );
+
+    ctx.bezierCurveTo(
+        390,425,
+        455,430,
+        475,475
+    );
+
+    ctx.moveTo(360,690);
+
+    ctx.bezierCurveTo(
+        420,625,
+        470,570,
+        540,560
+    );
+
+    ctx.moveTo(360,690);
+
+    ctx.bezierCurveTo(
+        300,640,
+        245,585,
+        230,520
+    );
+
+    ctx.moveTo(360,690);
+
+    ctx.bezierCurveTo(
+        390,650,
+        420,620,
+        445,575
+    );
+
+    ctx.stroke();
+
+    ctx.restore();
 }
 
 // Responsive screen
-function resize(){
-width=window.innerWidth;
-height=window.innerHeight;
-dpr=Math.min(window.devicePixelRatio||1,2);
+function resize() {
 
-canvas.width=Math.round(width*dpr);
-canvas.height=Math.round(height*dpr);
+    width = window.innerWidth;
+    height = window.innerHeight;
 
-scale=Math.min(width/DESIGN_W,height/DESIGN_H);
-ox=(width-DESIGN_W*scale)/2;
-oy=(height-DESIGN_H*scale)/2;
+    dpr = Math.min(
+        window.devicePixelRatio || 1,
+        2
+    );
 
-ctx.setTransform(dpr,0,0,dpr,0,0);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
 
-buildArtwork();
-started=performance.now();
+    scale = Math.min(
+        width / DESIGN_W,
+        height / DESIGN_H
+    );
 
-cancelAnimationFrame(frame);
-render(started);
+    ox = (width - DESIGN_W * scale) / 2;
+    oy = (height - DESIGN_H * scale) / 2;
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    buildArtwork();
+
+    started = performance.now();
+
+    cancelAnimationFrame(frame);
+
+    render(started);
 }
 
 // Progressive animation
-function render(now){
-ctx.clearRect(0,0,width,height);
-ctx.fillStyle="#000";
-ctx.fillRect(0,0,width,height);
+function render(now) {
 
-const elapsed=(now-started)/1000;
+    ctx.clearRect(0,0,width,height);
 
-ctx.save();
-ctx.translate(ox,oy);
-ctx.scale(scale,scale);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0,0,width,height);
 
-ctx.textAlign="center";
-ctx.textBaseline="middle";
+    const elapsed = (now - started) / 1000;
 
-// Heading
-for(const item of heading){
-const alpha=Math.max(0,Math.min(1,(elapsed-item.delay)/.3));
-if(alpha<=0)continue;
+    ctx.save();
 
-ctx.save();
-ctx.translate(item.x,item.y);
-ctx.rotate(item.rotation);
-ctx.globalAlpha=alpha;
-ctx.fillStyle="#ed1748";
-ctx.font="bold 29px Arial, sans-serif";
-ctx.fillText(item.char,0,0);
-ctx.restore();
+    ctx.translate(ox,oy);
+    ctx.scale(scale,scale);
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Words form the rose gradually
+    for (const item of rows) {
+
+        const alpha = Math.max(
+            0,
+            Math.min(
+                1,
+                (elapsed - item.delay) / .28
+            )
+        );
+
+        if (alpha <= 0) continue;
+
+        ctx.globalAlpha = alpha;
+
+        ctx.fillStyle = item.color;
+
+        ctx.font =
+            `${item.size}px Georgia, "Times New Roman", serif`;
+
+        ctx.fillText(
+            item.text,
+            item.x,
+            item.y
+        );
+    }
+
+    ctx.globalAlpha = 1;
+
+    // Rose petal details
+    drawPetalDetails(elapsed);
+
+    ctx.restore();
+
+    // Keep the completed rose visible
+    if (elapsed < 12) {
+        frame = requestAnimationFrame(render);
+    }
 }
 
-// Words forming the rose
-for(const item of rows){
-const alpha=Math.max(0,Math.min(1,(elapsed-item.delay)/.28));
-if(alpha<=0)continue;
+window.addEventListener("resize",resize,{
+    passive:true
+});
 
-ctx.globalAlpha=alpha;
-ctx.fillStyle=item.color;
-ctx.font=`${item.size}px Georgia, "Times New Roman", serif`;
-ctx.fillText(item.text,item.x,item.y);
-}
-
-ctx.globalAlpha=1;
-
-// Subtle petal contours
-if(elapsed>4){
-ctx.globalAlpha=Math.min(.13,(elapsed-4)*.025);
-ctx.strokeStyle="#f04468";
-ctx.lineWidth=1;
-
-ctx.beginPath();
-ctx.moveTo(360,735);
-ctx.bezierCurveTo(295,620,260,485,340,365);
-
-ctx.moveTo(360,735);
-ctx.bezierCurveTo(425,620,475,485,463,350);
-
-ctx.moveTo(210,500);
-ctx.quadraticCurveTo(360,570,600,490);
-
-ctx.stroke();
-}
-
-ctx.restore();
-
-if(elapsed<12){
-frame=requestAnimationFrame(render);
-}
-}
-
-window.addEventListener("resize",resize,{passive:true});
 resize();
 
 })();
 </script>
+
 </body>
 </html>
