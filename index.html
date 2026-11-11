@@ -1,877 +1,457 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Roses — Eternal Love</title>
+<meta name="theme-color" content="#000000">
+<title>1 Rose, Every Language</title>
 
 <style>
 * {
     box-sizing: border-box;
 }
 
-body {
+html, body {
     margin: 0;
-    background: #020001;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #000;
 }
 
-h1 {
-    color: #ff1a48;
-    font-size: clamp(16px, 4vw, 22px);
-    letter-spacing: 3px;
-    text-align: center;
-    text-shadow: 0 0 15px rgba(255,26,72,.8);
-    margin: 0 0 8px;
-    font-weight: 400;
+body {
+    display: grid;
+    place-items: center;
+    font-family: Georgia, serif;
 }
 
-#canvas {
-    position: relative;
-    width: min(450px, 100vw);
-    height: min(620px, 85vh);
-    background:
-        radial-gradient(ellipse at 50% 28%,
-        #250510 0%,
-        #100208 42%,
-        #020001 85%);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 0 35px rgba(255,0,50,.15);
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
 }
-
-.word {
-    position: absolute;
-    white-space: nowrap;
-    transform: translate(-50%,-50%);
-    font-size: 10px;
-    font-weight: 700;
-    opacity: 0;
-    pointer-events: none;
-    line-height: 1;
-    user-select: none;
-    transition: opacity .5s ease;
-}
-
-/* ROYAL RED PETALS */
-
-.c-heart {
-    color: #ff002f;
-    text-shadow:
-        0 0 5px #ff0033,
-        0 0 12px rgba(255,0,40,.9);
-}
-
-.c-inner {
-    color: #ff174f;
-    text-shadow:
-        0 0 6px #ff174f,
-        0 0 12px rgba(255,23,79,.7);
-}
-
-.c-mid {
-    color: #ff4779;
-    text-shadow:
-        0 0 7px #ff4779,
-        0 0 14px rgba(255,71,121,.7);
-}
-
-.c-outer {
-    color: #ff789d;
-    text-shadow:
-        0 0 7px #ff789d,
-        0 0 12px rgba(255,120,157,.6);
-}
-
-.c-edge {
-    color: #ffc0d2;
-    text-shadow:
-        0 0 6px #ff9db8,
-        0 0 12px #ff4779;
-}
-
-.c-gold {
-    color: #ffd18b;
-    text-shadow:
-        0 0 5px #ffad55,
-        0 0 12px rgba(255,170,80,.8);
-}
-
-/* GREEN STRUCTURE */
-
-.c-stem {
-    color: #00e676;
-    text-shadow: 0 0 7px #00e676;
-}
-
-.c-leaf {
-    color: #00c853;
-    text-shadow:
-        0 0 6px #00e676,
-        0 0 12px rgba(0,200,83,.7);
-}
-
-.c-root {
-    color: #32ed86;
-    text-shadow:
-        0 0 7px #00e676,
-        0 0 13px rgba(0,230,118,.8);
-}
-
 </style>
 </head>
 
 <body>
 
-<h1>1 Rose, Every Language</h1>
-<div id="canvas"></div>
+<canvas id="rose" aria-label="A rose gradually formed from words in many languages"></canvas>
 
 <script>
+(() => {
+    "use strict";
 
-// ============================================
-// 01 — WORD COLLECTION
-// ============================================
+    const canvas = document.getElementById("rose");
+    const ctx = canvas.getContext("2d");
 
-const phrases = [
-    "أحبك",
-    "I LOVE YOU",
-    "Te amo",
-    "Je t'aime",
-    "Ich liebe dich",
-    "Te quiero",
-    "Mahal kita",
-    "S'agapo",
-    "Milujem ťa",
-    "Kocham Cię",
-    "Seni seviyorum",
-    "Я тебя люблю",
-    "사랑해요",
-    "我爱你",
-    "Ti amo",
-    "Eu te amo",
-    "Nakapenda",
-    "Jeg elsker dig",
-    "Minä rakastan sinua",
-    "Jag älskar dig",
-    "Te dua",
-    "Volim te",
-    "Obicham te",
-    "Ani ohev otah",
-    "Ana behibak",
-    "Tè amu",
-    "Ik hou van jou",
-    "Miluji tě",
-    "Mən səni sevirəm",
-    "Aloha au ia 'oe",
-    "Aloha",
-    "Namaste",
-    "Szil szeretlek"
-];
+    const words = [
+        "LOVE","AMOUR","AMORE","愛","حب","AMOR",
+        "LIEBE","사랑","愛情","प्यार","LJUBAV",
+        "אהבה","Любовь","SEVGİ","KÄRLEK",
+        "TE AMO","Я ТЕБЯ ЛЮБЛЮ","TI AMO",
+        "JE T'AIME","사랑해","我爱你",
+        "愛してる","أحبك","MAHAL KITA",
+        "EU TE AMO","LOVE","AMOUR","愛","LIEBE"
+    ];
 
-const canvas = document.getElementById("canvas");
-const sequence = [];
-
-function addWord(x, y, color, size = 10) {
-
-    const el = document.createElement("div");
-
-    el.className = "word " + color;
-
-    el.textContent =
-        phrases[Math.floor(Math.random() * phrases.length)];
-
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-    el.style.fontSize = size + "px";
-
-    sequence.push(el);
-}
-
-
-// ============================================
-// 02 — ROYAL PETAL MATHEMATICS
-// ============================================
-
-// كل بتلة لها انحناء خاص بها
-
-function royalPetalPoint(
-    cx, cy,
-    angle,
-    length,
-    width,
-    t,
-    u,
-    curl = 0
-) {
-
-    const shape =
-        Math.pow(Math.sin(Math.PI * t), 0.72);
-
-    const radial =
-        length * t;
-
-    const lateral =
-        u * width * shape;
-
-    const curling =
-        curl * Math.sin(t * Math.PI * 2);
-
-    return {
-
-        x:
-            cx +
-            Math.cos(angle) * radial -
-            Math.sin(angle) * lateral +
-            Math.cos(angle + Math.PI / 2) * curling,
-
-        y:
-            cy +
-            Math.sin(angle) * radial +
-            Math.cos(angle) * lateral +
-            Math.sin(angle + Math.PI / 2) * curling
-
+    const rand = (n) => {
+        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
     };
-}
 
+    let W = 0;
+    let H = 0;
+    let dpr = 1;
+    let items = [];
+    let titlePoints = [];
+    let start = 0;
+    let raf = 0;
+    let scale = 1;
+    let cx = 0;
+    let cy = 0;
+    let unit = 1;
 
-// ============================================
-// 03 — INDIVIDUAL ROYAL PETAL
-// ============================================
+    function rosePath(x, y, s) {
+        const p = new Path2D();
 
-function drawRoyalPetal(
-    cx, cy,
-    angle,
-    length,
-    width,
-    color,
-    curl = 0
-) {
+        p.moveTo(x, y + s * .43);
 
-    // سطح البتلة
+        p.bezierCurveTo(
+            x-s*.08, y+s*.31,
+            x-s*.43, y+s*.17,
+            x-s*.46, y-s*.10
+        );
 
-    for (let i = 1; i <= 11; i++) {
+        p.bezierCurveTo(
+            x-s*.49, y-s*.36,
+            x-s*.28, y-s*.48,
+            x-s*.10, y-s*.34
+        );
 
-        const t = i / 11;
+        p.bezierCurveTo(
+            x-s*.04, y-s*.52,
+            x+s*.17, y-s*.51,
+            x+s*.20, y-s*.31
+        );
 
-        for (let j = -3; j <= 3; j++) {
+        p.bezierCurveTo(
+            x+s*.40, y-s*.45,
+            x+s*.53, y-s*.24,
+            x+s*.42, y+s*.02
+        );
 
-            const u = j / 3;
+        p.bezierCurveTo(
+            x+s*.36, y+s*.20,
+            x+s*.12, y+s*.35,
+            x, y+s*.43
+        );
 
-            const point = royalPetalPoint(
-                cx, cy,
-                angle,
-                length,
-                width,
-                t,
-                u,
-                curl
-            );
-
-            addWord(
-                point.x,
-                point.y,
-                color
-            );
-
-        }
+        p.closePath();
+        return p;
     }
 
+    function leafPath(x, y, s, side) {
+        const p = new Path2D();
+        const dir = side;
 
-    // الحافة العلوية الملتفة
+        p.moveTo(x, y);
 
-    for (let i = 0; i <= 22; i++) {
+        p.quadraticCurveTo(
+            x+dir*s*.18, y-s*.20,
+            x+dir*s*.55, y-s*.22
+        );
 
-        const t = i / 22;
+        p.quadraticCurveTo(
+            x+dir*s*.48, y+s*.02,
+            x, y
+        );
+
+        p.closePath();
+        return p;
+    }
+
+    function resize() {
+        dpr = Math.min(devicePixelRatio || 1, 2);
+
+        W = innerWidth;
+        H = innerHeight;
+
+        canvas.width = Math.round(W*dpr);
+        canvas.height = Math.round(H*dpr);
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        scale = Math.min(W/600, H/760)*.94;
+
+        cx = W/2;
+        cy = H/2 + 8*scale;
+        unit = scale;
+
+        build();
+
+        start = performance.now();
+
+        cancelAnimationFrame(raf);
+        draw(start);
+    }
+
+    function build() {
+        items = [];
+
+        const s = 255*unit;
+        const x = cx;
+        const y = cy-64*unit;
+
+        const head = rosePath(x, y, s);
+
+        const headBox = {
+            l: x-s*.5,
+            r: x+s*.55,
+            t: y-s*.55,
+            b: y+s*.45
+        };
+
+        let index = 0;
+
+        // Rose petals
+
+        for (
+            let yy = headBox.t;
+            yy < headBox.b;
+            yy += 8.1*unit
+        ) {
+            for (
+                let xx = headBox.l;
+                xx < headBox.r;
+                xx += 8.1*unit
+            ) {
+                const j = index++;
+
+                const px = xx+(rand(j+3)-.5)*2.2*unit;
+                const py = yy+(rand(j+9)-.5)*2.2*unit;
+
+                if (ctx.isPointInPath(head, px, py)) {
+
+                    const word = words[
+                        Math.floor(rand(j+21)*words.length)
+                    ];
+
+                    const size = (5.3+rand(j+31)*2)*unit;
+
+                    items.push({
+                        x: px,
+                        y: py,
+                        word,
+                        size,
+                        delay: rand(j+51)*6.2,
+                        color: rand(j+71)>.28
+                            ? "#ff174d"
+                            : "#c90036",
+                        rot: (rand(j+91)-.5)*.08
+                    });
+                }
+            }
+        }
+
+        // Stem
+
+        const stemX = x;
+        const stemTop = y+s*.36;
+        const stemBottom = cy+292*unit;
+
+        for (
+            let yy = stemTop;
+            yy < stemBottom;
+            yy += 8.2*unit
+        ) {
+            const j = index++;
+
+            items.push({
+                x: stemX+(rand(j)-.5)*5*unit,
+                y: yy,
+                word: words[
+                    Math.floor(rand(j+8)*words.length)
+                ],
+                size: 5.5*unit,
+                delay: 6.2+rand(j+18)*2,
+                color: "#4b9b38",
+                rot: 0
+            });
+        }
+
+        // Leaves
 
         for (const side of [-1, 1]) {
 
-            const point = royalPetalPoint(
-                cx, cy,
-                angle,
-                length,
-                width,
-                t,
-                side,
-                curl
+            const lx = x+side*3*unit;
+            const ly = cy+120*unit;
+
+            const leaf = leafPath(
+                lx,
+                ly,
+                145*unit,
+                side
             );
 
-            addWord(
-                point.x,
-                point.y,
-                "c-edge"
+            const bounds = {
+                l: lx-150*unit,
+                r: lx+150*unit,
+                t: ly-75*unit,
+                b: ly+20*unit
+            };
+
+            for (
+                let yy = bounds.t;
+                yy < bounds.b;
+                yy += 8.4*unit
+            ) {
+                for (
+                    let xx = bounds.l;
+                    xx < bounds.r;
+                    xx += 8.4*unit
+                ) {
+                    const j = index++;
+
+                    const px = xx+(rand(j+3)-.5)*2*unit;
+                    const py = yy+(rand(j+6)-.5)*2*unit;
+
+                    if (ctx.isPointInPath(leaf, px, py)) {
+
+                        items.push({
+                            x: px,
+                            y: py,
+                            word: words[
+                                Math.floor(rand(j+10)*words.length)
+                            ],
+                            size: 5.2*unit,
+                            delay: 7+rand(j+14)*1.7,
+                            color: "#58a83c",
+                            rot: 0
+                        });
+                    }
+                }
+            }
+        }
+
+        // Curved title
+
+        titlePoints = [];
+
+        const title = "1 Rose, Every Language";
+        const radius = 220*unit;
+        const centerY = cy-330*unit;
+
+        for (let i = 0; i < title.length; i++) {
+
+            const a = -Math.PI*.84 +
+                (i/(title.length-1))*Math.PI*.68;
+
+            titlePoints.push({
+                ch: title[i],
+                x: cx+Math.cos(a)*radius,
+                y: centerY+Math.sin(a)*radius,
+                angle: a+Math.PI/2,
+                delay: i*.11
+            });
+        }
+
+        items.sort((a, b) => a.delay-b.delay);
+    }
+
+    function draw(now) {
+
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, W, H);
+
+        const elapsed = (now-start)/1000;
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Title animation
+
+        ctx.save();
+
+        for (const p of titlePoints) {
+
+            const k = Math.max(
+                0,
+                Math.min(1, (elapsed-p.delay)/.35)
             );
 
+            if (!k) continue;
+
+            ctx.save();
+
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+
+            ctx.globalAlpha = k;
+            ctx.fillStyle = "#ff174d";
+
+            ctx.font = `bold ${Math.max(13,18*unit)}px Arial`;
+
+            ctx.fillText(p.ch, 0, 0);
+
+            ctx.restore();
+        }
+
+        ctx.restore();
+
+        // Gradual word formation
+
+        for (const it of items) {
+
+            const k = Math.max(
+                0,
+                Math.min(1, (elapsed-it.delay)/.42)
+            );
+
+            if (k <= 0) continue;
+
+            ctx.save();
+
+            ctx.translate(it.x, it.y);
+            ctx.rotate(it.rot);
+
+            ctx.globalAlpha = k;
+
+            ctx.fillStyle = it.color;
+            ctx.shadowColor = it.color;
+            ctx.shadowBlur = 1.8*unit;
+
+            ctx.font = `${Math.max(4.2,it.size)}px Georgia,serif`;
+
+            ctx.fillText(it.word, 0, 0);
+
+            ctx.restore();
+        }
+
+        // Petal details
+
+        if (elapsed > 3) {
+
+            const alpha = Math.min(
+                .22,
+                (elapsed-3)*.035
+            );
+
+            const x = cx;
+            const y = cy-64*unit;
+            const s = 255*unit;
+
+            ctx.save();
+
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = "#ff456b";
+            ctx.lineWidth = .7*unit;
+
+            ctx.beginPath();
+
+            ctx.moveTo(x, y+s*.34);
+
+            ctx.bezierCurveTo(
+                x-s*.17, y+s*.03,
+                x-s*.30, y-s*.20,
+                x-s*.12, y-s*.36
+            );
+
+            ctx.moveTo(x, y+s*.34);
+
+            ctx.bezierCurveTo(
+                x+s*.17, y+s*.03,
+                x+s*.34, y-s*.16,
+                x+s*.24, y-s*.36
+            );
+
+            ctx.moveTo(x-s*.29, y-s*.16);
+
+            ctx.quadraticCurveTo(
+                x, y-s*.02,
+                x+s*.30, y-s*.14
+            );
+
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Stop after formation
+
+        if (elapsed < 10.5) {
+            raf = requestAnimationFrame(draw);
         }
     }
 
-
-    // خطوط العروق المزخرفة
-
-    for (let vein = -2; vein <= 2; vein++) {
-
-        for (let i = 3; i <= 12; i++) {
-
-            const t = i / 13;
-
-            const point = royalPetalPoint(
-                cx, cy,
-                angle,
-                length,
-                width,
-                t,
-                vein * .22,
-                curl
-            );
-
-            addWord(
-                point.x,
-                point.y,
-                "c-outer"
-            );
-
-        }
-    }
-
-
-    // أطراف ذهبية زخرفية
-
-    for (let i = 1; i <= 9; i++) {
-
-        const t = i / 10;
-
-        const point = royalPetalPoint(
-            cx, cy,
-            angle,
-            length,
-            width,
-            t,
-            1,
-            curl
-        );
-
-        addWord(
-            point.x,
-            point.y,
-            "c-gold"
-        );
-
-    }
-
-}
-
-
-// ============================================
-// 04 — SPIRAL CENTER
-// ============================================
-
-function drawRoyalHeart(cx, cy, scale) {
-
-    // حلزون القلب
-
-    for (let i = 0; i < 125; i++) {
-
-        const angle = i * .19;
-
-        const radius =
-            (1.5 + i * .105) * scale;
-
-        const x =
-            cx + Math.cos(angle) * radius;
-
-        const y =
-            cy + Math.sin(angle) * radius * .85;
-
-        addWord(
-            x,
-            y,
-            "c-heart"
-        );
-
-    }
-
-
-    // دوائر داخلية
-
-    for (let ring = 0; ring < 5; ring++) {
-
-        const radius =
-            (7 + ring * 5) * scale;
-
-        for (let i = 0; i < 38; i++) {
-
-            const angle =
-                i / 38 * Math.PI * 2;
-
-            addWord(
-                cx + Math.cos(angle) * radius,
-                cy + Math.sin(angle) * radius * .85,
-                ring < 2 ? "c-heart" : "c-gold"
-            );
-
-        }
-    }
-
-}
-
-
-// ============================================
-// 05 — ORNAMENTAL ROSE RINGS
-// ============================================
-
-function drawOrnaments(cx, cy, scale) {
-
-    for (let ring = 0; ring < 3; ring++) {
-
-        const radius =
-            (48 + ring * 13) * scale;
-
-        for (let i = 0; i < 85; i++) {
-
-            const angle =
-                i / 85 * Math.PI * 2;
-
-            const wave =
-                Math.sin(angle * 7) *
-                3 * scale;
-
-            const r = radius + wave;
-
-            addWord(
-                cx + Math.cos(angle) * r,
-                cy + Math.sin(angle) * r * .84,
-                ring === 1 ? "c-gold" : "c-edge"
-            );
-
-        }
-    }
-
-}
-
-
-// ============================================
-// 06 — ROYAL BLOOM ENGINE
-// ============================================
-
-function generateRoyalRose(cx, cy, scale, rotation = 0) {
-
-    // الطبقة الخارجية: بتلات عريضة
-
-    for (let p = 0; p < 11; p++) {
-
-        const angle =
-            p / 11 * Math.PI * 2 + rotation;
-
-        drawRoyalPetal(
-            cx, cy,
-            angle,
-            105 * scale,
-            27 * scale,
-            "c-edge",
-            5 * scale
-        );
-
-    }
-
-
-    // الطبقة الثانية: بتلات ملتفة
-
-    for (let p = 0; p < 9; p++) {
-
-        const angle =
-            p / 9 * Math.PI * 2 +
-            rotation + .24;
-
-        drawRoyalPetal(
-            cx, cy,
-            angle,
-            83 * scale,
-            24 * scale,
-            "c-outer",
-            7 * scale
-        );
-
-    }
-
-
-    // الطبقة الثالثة: البتلات الحمراء
-
-    for (let p = 0; p < 8; p++) {
-
-        const angle =
-            p / 8 * Math.PI * 2 +
-            rotation + .35;
-
-        drawRoyalPetal(
-            cx, cy,
-            angle,
-            65 * scale,
-            20 * scale,
-            "c-mid",
-            6 * scale
-        );
-
-    }
-
-
-    // الطبقة الرابعة: البتلات الداخلية
-
-    for (let p = 0; p < 7; p++) {
-
-        const angle =
-            p / 7 * Math.PI * 2 +
-            rotation + .18;
-
-        drawRoyalPetal(
-            cx, cy,
-            angle,
-            47 * scale,
-            16 * scale,
-            "c-inner",
-            4 * scale
-        );
-
-    }
-
-
-    // الطبقة الخامسة: قلب الوردة
-
-    for (let p = 0; p < 6; p++) {
-
-        const angle =
-            p / 6 * Math.PI * 2 +
-            rotation;
-
-        drawRoyalPetal(
-            cx, cy,
-            angle,
-            31 * scale,
-            11 * scale,
-            "c-heart",
-            3 * scale
-        );
-
-    }
-
-
-    // القلب الحلزوني
-
-    drawRoyalHeart(cx, cy, scale);
-
-    // الزخارف
-
-    drawOrnaments(cx, cy, scale);
-
-}
-
-
-// ============================================
-// 07 — ROYAL BOUQUET
-// ============================================
-
-// وردة جانبية يسار
-
-generateRoyalRose(
-    130, 145, .67, -.18
-);
-
-// وردة جانبية يمين
-
-generateRoyalRose(
-    320, 145, .67, .18
-);
-
-// الوردة الملكية المركزية
-
-generateRoyalRose(
-    225, 190, 1.02, .08
-);
-
-
-// ============================================
-// 08 — GREEN STEMS
-// ============================================
-
-function drawStem(
-    x1, y1,
-    x2, y2,
-    bend = 0
-) {
-
-    for (let i = 0; i <= 65; i++) {
-
-        const t = i / 65;
-
-        const x =
-            x1 +
-            (x2 - x1) * t +
-            Math.sin(t * Math.PI) * bend;
-
-        const y =
-            y1 +
-            (y2 - y1) * t;
-
-        addWord(
-            x,
-            y,
-            "c-stem"
-        );
-
-    }
-
-}
-
-
-// الساق المركزي
-
-drawStem(
-    225, 270,
-    225, 570,
-    10
-);
-
-// الساق الأيسر
-
-drawStem(
-    145, 220,
-    195, 465,
-    -12
-);
-
-// الساق الأيمن
-
-drawStem(
-    305, 220,
-    255, 465,
-    12
-);
-
-
-// ============================================
-// 09 — LUXURY LEAF ENGINE
-// ============================================
-
-function drawRoyalLeaf(
-    startX,
-    startY,
-    side,
-    length = 75,
-    width = 22
-) {
-
-    // جسم الورقة
-
-    for (let i = 1; i <= 30; i++) {
-
-        const t = i / 30;
-
-        const spread =
-            Math.sin(Math.PI * t);
-
-        const x =
-            startX + side * length * t;
-
-        const centerY =
-            startY - Math.sin(Math.PI * t) * 18;
-
-        for (let j = -4; j <= 4; j++) {
-
-            const y =
-                centerY +
-                j / 4 * width * spread;
-
-            addWord(
-                x,
-                y,
-                "c-leaf"
-            );
-
-        }
-    }
-
-
-    // عرق الورقة المركزي
-
-    for (let i = 0; i <= 30; i++) {
-
-        const t = i / 30;
-
-        addWord(
-            startX + side * length * t,
-            startY - Math.sin(Math.PI * t) * 18,
-            "c-stem"
-        );
-
-    }
-
-
-    // العروق الجانبية
-
-    for (let vein = 1; vein <= 6; vein++) {
-
-        const t = vein / 7;
-
-        const x =
-            startX + side * length * t;
-
-        const y =
-            startY - Math.sin(Math.PI * t) * 18;
-
-        const spread =
-            Math.sin(Math.PI * t) * width;
-
-        for (let j = 1; j <= 5; j++) {
-
-            const v = j / 5;
-
-            addWord(
-                x + side * v * 8,
-                y - spread * v,
-                "c-leaf"
-            );
-
-            addWord(
-                x + side * v * 8,
-                y + spread * v,
-                "c-leaf"
-            );
-
-        }
-    }
-
-
-    // حدود الورقة
-
-    for (let i = 0; i <= 25; i++) {
-
-        const t = i / 25;
-
-        const x =
-            startX + side * length * t;
-
-        const y =
-            startY - Math.sin(Math.PI * t) * 18;
-
-        const spread =
-            Math.sin(Math.PI * t) * width;
-
-        addWord(x, y - spread, "c-leaf");
-        addWord(x, y + spread, "c-leaf");
-
-    }
-
-}
-
-
-// الأوراق الكبيرة
-
-drawRoyalLeaf(210, 310, -1, 82, 23);
-drawRoyalLeaf(240, 355, 1, 82, 23);
-drawRoyalLeaf(210, 425, -1, 73, 20);
-drawRoyalLeaf(240, 475, 1, 72, 20);
-
-// الأوراق الصغيرة
-
-drawRoyalLeaf(180, 270, -1, 45, 13);
-drawRoyalLeaf(270, 290, 1, 45, 13);
-drawRoyalLeaf(205, 510, -1, 42, 12);
-drawRoyalLeaf(245, 525, 1, 42, 12);
-
-
-// ============================================
-// 10 — GREEN ROOT SYSTEM
-// ============================================
-
-function drawRoot(
-    x1, y1,
-    x2, y2,
-    bend = 0
-) {
-
-    for (let i = 0; i <= 32; i++) {
-
-        const t = i / 32;
-
-        const x =
-            x1 +
-            (x2 - x1) * t +
-            Math.sin(t * Math.PI) * bend;
-
-        const y =
-            y1 +
-            (y2 - y1) * t;
-
-        addWord(
-            x,
-            y,
-            "c-root"
-        );
-
-    }
-
-}
-
-
-// جذور رئيسية
-
-drawRoot(225, 565, 225, 610, 0);
-drawRoot(225, 580, 160, 610, -5);
-drawRoot(225, 580, 290, 610, 5);
-
-// تفرعات الجذور
-
-drawRoot(190, 590, 170, 615, -5);
-drawRoot(260, 590, 280, 615, 5);
-drawRoot(225, 600, 205, 618, -3);
-drawRoot(225, 600, 245, 618, 3);
-
-
-// ============================================
-// 11 — GRADUAL WORD ANIMATION
-// ============================================
-
-let current = 0;
-
-const animationSpeed = 12;
-
-function showNextWord() {
-
-    if (current >= sequence.length) {
-        return;
-    }
-
-    const word = sequence[current];
-
-    canvas.appendChild(word);
-
-    requestAnimationFrame(() => {
-        word.style.opacity = "1";
+    addEventListener("resize", resize, {
+        passive: true
     });
 
-    current++;
+    resize();
 
-    setTimeout(
-        showNextWord,
-        animationSpeed
-    );
-
-}
-
-
-// ============================================
-// 12 — START
-// ============================================
-
-setTimeout(() => {
-    showNextWord();
-}, 500);
-
+})();
 </script>
 
 </body>
