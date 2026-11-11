@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>1 Rose, Every Language - Realistic Masterpiece</title>
+<title>A Bouquet of Love - Every Language</title>
 
 <style>
 * {
@@ -12,7 +12,7 @@
 
 body {
     margin: 0;
-    background: #000000;
+    background: #030001;
     min-height: 100vh;
     overflow: hidden;
     display: flex;
@@ -23,65 +23,60 @@ body {
 }
 
 h1 {
-    color: #ff1e4d;
+    color: #ff2a5f;
     font-size: clamp(16px, 4vw, 22px);
     letter-spacing: 3px;
     text-align: center;
-    text-shadow: 0 0 12px rgba(255, 30, 77, 0.8);
-    margin: 0 0 8px;
+    text-shadow: 0 0 15px rgba(255, 42, 95, 0.8);
+    margin: 0 0 10px;
     font-weight: 400;
 }
 
 #canvas {
     position: relative;
-    width: 420px;
-    height: 620px;
+    width: 450px;
+    height: 650px;
 }
 
 .word {
     position: absolute;
     white-space: nowrap;
     transform: translate(-50%, -50%);
-    font-size: 7.5px;
-    font-weight: bold;
+    font-size: 9px; /* حجم واضح وغير مكتظ */
+    font-weight: 700;
     opacity: 0;
     pointer-events: none;
     line-height: 1;
     user-select: none;
 }
 
-/* تدرجات ألوان البتلات الحقيقية */
-.p-deep  { color: #990012; text-shadow: 0 0 4px rgba(153, 0, 18, 0.6); }
-.p-mid   { color: #d90429; text-shadow: 0 0 5px rgba(217, 4, 41, 0.7); }
-.p-light { color: #ff2a5f; text-shadow: 0 0 6px rgba(255, 42, 95, 0.8); }
-.p-edge  { color: #ff6b8b; text-shadow: 0 0 5px rgba(255, 107, 139, 0.7); }
+/* درجات الألوان للبتلات بتفاصيل بارزة */
+.rose-core { color: #8b0000; text-shadow: 0 0 6px rgba(139, 0, 0, 0.9); }
+.rose-inner { color: #ff1e4d; text-shadow: 0 0 6px rgba(255, 30, 77, 0.8); }
+.rose-mid   { color: #ff4d79; text-shadow: 0 0 6px rgba(255, 77, 121, 0.8); }
+.rose-outer { color: #ff80a6; text-shadow: 0 0 6px rgba(255, 128, 166, 0.7); }
 
-/* ألوان الساق والأوراق */
-.s-green { color: #00f576; text-shadow: 0 0 5px rgba(0, 245, 118, 0.7); }
-.s-dark  { color: #0b6623; text-shadow: 0 0 4px rgba(11, 102, 35, 0.6); }
+/* ألوان الساق والأوراق الواضحة */
+.stem-green { color: #00e676; text-shadow: 0 0 6px rgba(0, 230, 118, 0.8); }
+.stem-dark  { color: #0b6623; text-shadow: 0 0 5px rgba(11, 102, 35, 0.7); }
 </style>
 </head>
 
 <body>
 
-<h1>1 Rose, Every Language</h1>
+<h1>A Bouquet of Love, Every Language</h1>
 <div id="canvas"></div>
 
 <script>
-// قائمة شاملة لأكثر من 45 لغة عالمية لكلمة "أحبك"
 const languages = [
     "أحبك", "I LOVE YOU", "Te amo", "Je t'aime", "Ich liebe dich", 
     "Te quiero", "Mahal kita", "S'agapo", "Milujem ťa", "Kocham Cię", 
     "Seni seviyorum", "Я тебя люблю", "사랑해요", "我爱你", "Ti amo", 
-    "Eu te amo", "Nakapenda", "Aloha au ia 'oe", "Jeg elsker dig", "Minä rakastan sinua", 
-    "Jag älskar dig", "Te dua", "Volim te", "Obicham te", "Ani ohev otah", 
-    "Saya cinta padamu", "Tè amu", "Ik hou van jou", "Szil szeretlek", "Miluji tě", 
-    "Mən səni sevirəm", "Ana behibak", "Bulls-e", "Aloha", "Namaste"
+    "Eu te amo", "Nakapenda", "Jeg elsker dig", "Minä rakastan sinua", 
+    "Jag älskar dig", "Te dua", "Volim te", "Obicham te", "Ani ohev otah"
 ];
 
 const canvas = document.getElementById("canvas");
-const CX = 210;
-const CY = 175;
 const sequence = [];
 
 function addWord(x, y, colorClass) {
@@ -93,110 +88,93 @@ function addWord(x, y, colorClass) {
     sequence.push(el);
 }
 
-// =====================================
-// 1. رسم الساق الحقيقي (منحني وأنيق)
-// =====================================
-function buildStem() {
-    for (let i = 0; i < 60; i++) {
-        let t = i / 60;
-        let x = CX + Math.sin(t * Math.PI * 1.8) * 10 - (t * 5);
-        let y = CY + 110 + (t * 240);
-        addWord(x, y, i % 2 === 0 ? "s-green" : "s-dark");
-    }
-}
-
-// =====================================
-// 2. الأوراق الجانبية المفلطحة والواقعية
-// =====================================
-function buildRealisticLeaf(startX, startY, direction) {
-    let steps = 30;
-    for (let i = 0; i <= steps; i++) {
-        let t = i / steps;
-        let w = Math.sin(t * Math.PI) * 24;
-        
-        let x1 = startX + direction * (t * 70);
-        let y1 = startY + (t * 25) - w;
-        
-        let x2 = startX + direction * (t * 70);
-        let y2 = startY + (t * 25) + w;
-
-        addWord(x1, y1, "s-green");
-        if (i % 2 === 0) addWord(x2, y2, "s-dark");
-    }
-}
-
-// =====================================
-// 3. تصميم الوردة الحقيقية (بتلات مقوسة منفصلة ومتداخلة)
-// =====================================
-function buildRealRosePetals() {
-    // أ) قلب الوردة (Bud Core - دوائر ملتفة متراصة)
-    for (let i = 0; i < 45; i++) {
-        let angle = i * 0.35;
-        let r = 2 + (i * 0.5);
-        let x = CX + Math.cos(angle) * r;
-        let y = CY + Math.sin(angle) * (r * 0.8);
-        addWord(x, y, "p-deep");
+// دالة لرسم وردة مفصلة وواضحة في إحداثيات معينة
+function createDetailedRose(centerX, centerY, scale = 1) {
+    // 1. قلب الوردة (المركز الحلزوني الواضح)
+    for (let i = 0; i < 25; i++) {
+        let angle = i * 0.4;
+        let r = (2 + (i * 0.5)) * scale;
+        addWord(centerX + Math.cos(angle) * r, centerY + Math.sin(angle) * r, "rose-core");
     }
 
-    // ب) بتلات داخلية مغلقة (Inner Petals - شكل كوب الوردة)
-    let innerPetals = 5;
-    for (let p = 0; p < innerPetals; p++) {
-        let baseAngle = (p / innerPetals) * Math.PI * 2;
+    // 2. بتلات داخلية مقوسة
+    for (let p = 0; p < 5; p++) {
+        let baseAngle = (p / 5) * Math.PI * 2;
+        for (let j = 0; j < 10; j++) {
+            let t = j / 9;
+            let angle = baseAngle + (t - 0.5) * 0.8;
+            let dist = 18 * scale;
+            addWord(centerX + Math.cos(angle) * dist, centerY + Math.sin(angle) * dist, "rose-inner");
+        }
+    }
+
+    // 3. بتلات وسطى (توزيع هندسي يظهر شكل الورقة بوضوح بدون تداخل مزعج)
+    for (let p = 0; p < 7; p++) {
+        let baseAngle = (p / 7) * Math.PI * 2 + 0.2;
+        for (let j = 0; j < 14; j++) {
+            let t = j / 13;
+            let angle = baseAngle + (t - 0.5) * 1.0;
+            let dist = (32 + Math.sin(t * Math.PI) * 10) * scale;
+            addWord(centerX + Math.cos(angle) * dist, centerY + Math.sin(angle) * dist, "rose-mid");
+        }
+    }
+
+    // 4. بتلات خارجية كبيرة وواضحة (تبين تفاصيل حواف الوردة)
+    for (let p = 0; p < 9; p++) {
+        let baseAngle = (p / 9) * Math.PI * 2;
         for (let j = 0; j < 18; j++) {
             let t = j / 17;
-            let angle = baseAngle + (t - 0.5) * 0.9;
-            let dist = 22 + Math.sin(t * Math.PI) * 18;
-            let x = CX + Math.cos(angle) * dist;
-            let y = CY + Math.sin(angle) * dist * 0.85;
-            addWord(x, y, "p-mid");
+            let angle = baseAngle + (t - 0.5) * 1.2;
+            let dist = (55 + Math.sin(t * Math.PI) * 18) * scale;
+            addWord(centerX + Math.cos(angle) * dist, centerY + Math.sin(angle) * (dist * 0.9), "rose-outer");
         }
-    }
-
-    // ج) بتلات وسطى منفتحة (Middle Blooming Petals)
-    let midPetals = 7;
-    for (let p = 0; p < midPetals; p++) {
-        let baseAngle = (p / midPetals) * Math.PI * 2 + 0.3;
-        for (let j = 0; j < 22; j++) {
-            let t = j / 21;
-            let angle = baseAngle + (t - 0.5) * 1.1;
-            let dist = 45 + Math.sin(t * Math.PI) * 28;
-            let x = CX + Math.cos(angle) * dist;
-            let y = CY + Math.sin(angle) * dist * 0.88;
-            addWord(x, y, "p-light");
-        }
-    }
-
-    // د) البتلات الخارجية الكبيرة والمفرودة (Outer Large Rose Petals - الشكل الحقيقي للوردة الجورية)
-    let outerPetals = 9;
-    for (let p = 0; p < outerPetals; p++) {
-        let baseAngle = (p / outerPetals) * Math.PI * 2;
-        for (let j = 0; j < 28; j++) {
-            let t = j / 27;
-            let angle = baseAngle + (t - 0.5) * 1.3;
-            // شكل مقوس حقيقي للبتلة الخارجية يمنحها عرضاً وانحناءً طبيعياً
-            let dist = 75 + Math.sin(t * Math.PI) * 42;
-            let x = CX + Math.cos(angle) * dist;
-            let y = CY + Math.sin(angle) * (dist * 0.82) - (Math.cos(angle) * 10);
-            addWord(x, y, "p-edge");
-        }
-    }
-
-    // هـ) سبلات الوردة الخضراء تحت البرعم (Sepals)
-    for (let i = -4; i <= 4; i++) {
-        let x = CX + (i * 9);
-        let y = CY + 88 + Math.abs(i) * 4;
-        addWord(x, y, "s-green");
     }
 }
 
-// بناء الهيكل المتكامل
-buildStem();
-buildRealisticLeaf(CX - 6, CY + 130, -1); // الورقة اليسرى
-buildRealisticLeaf(CX - 4, CY + 175, 1);  // الورقة اليمنى
-buildRealRosePetals();                    // الوردة الحقيقية المعقدة
+// رسم باقة مكونة من 3 ورود متناسقة (وردة رئيسية في المنتصف ووردتين جانبيتين أصغر قليلاً)
+// 1. الورود الجانبية
+createDetailedRose(130, 160, 0.75);
+createDetailedRose(320, 160, 0.75);
+
+// 2. الوردة الرئيسية الكبيرة في المنتصف
+createDetailedRose(225, 120, 1.15);
+
+// 3. سيقان الباقة الملتفة والأنيقة
+for (let i = 0; i < 70; i++) {
+    let t = i / 70;
+    // الساق الرئيسي المتجه للأسفل
+    let x1 = 225 + Math.sin(t * Math.PI * 1.5) * 8;
+    let y1 = 220 + (t * 320);
+    addWord(x1, y1, i % 2 === 0 ? "stem-green" : "stem-dark");
+
+    // سيقان فرعية للوردتين الجانبيتين
+    if (i < 40) {
+        let x2 = 130 + (t * 95);
+        let y2 = 210 + (t * 110);
+        let x3 = 320 - (t * 95);
+        let y3 = 210 + (t * 110);
+        addWord(x2, y2, "stem-green");
+        addWord(x3, y3, "stem-dark");
+    }
+}
+
+// 4. أوراق الشجر للباقة (بتفاصيل واضحة وبارزة)
+function drawLeafCluster(startX, startY, side) {
+    for (let i = 0; i < 20; i++) {
+        let t = i / 19;
+        let w = Math.sin(t * Math.PI) * 22;
+        let x = startX + side * (t * 60);
+        let y = startY + (t * 20) - w;
+        addWord(x, y, "stem-green");
+    }
+}
+
+drawLeafCluster(200, 320, -1);
+drawLeafCluster(250, 360, 1);
+drawLeafCluster(170, 270, -1);
 
 // =====================================
-// 4. الحركة والظهور التدريجي السلس
+// نظام التحريك والظهور التدريجي
 // =====================================
 let current = 0;
 
@@ -206,14 +184,14 @@ function showNextWord() {
     let word = sequence[current];
     canvas.appendChild(word);
 
-    word.style.transition = "opacity 0.15s ease-out";
+    word.style.transition = "opacity 0.2s ease-out";
     word.style.opacity = "1";
 
     current++;
-    setTimeout(showNextWord, 18); // سرعة عرض مثالية تظهر بناء الكلمات كأنها ترسم نفسها
+    setTimeout(showNextWord, 25); // سرعة عرض متوازنة لتستمتع بمشاهدة رسم الباقة بالتفصيل
 }
 
-setTimeout(showNextWord, 300);
+setTimeout(showNextWord, 400);
 
 </script>
 
